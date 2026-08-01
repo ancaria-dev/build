@@ -1,0 +1,17 @@
+[versions]
+# Shadow does the fat jar. Writing that ourselves is a weekend of relocation and
+# service-file merging that somebody else already maintains.
+shadow = "9.6.1"
+# Reads a class file without loading it, which is the whole point of the linter:
+# a mod's static initialiser has no business running in a build.
+asm = "9.8"
+junit = "5.11.4"
+
+[plugins]
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+
+[libraries]
+# The same plugin, as a dependency: our plugin applies it at runtime, so it has
+# to be on the plugin's own compile and runtime classpath.
+shadow = { module = "com.gradleup.shadow:shadow-gradle-plugin", version.ref = "shadow" }
+asm = { module = "org.ow2.asm:asm", version.ref = "asm" }
