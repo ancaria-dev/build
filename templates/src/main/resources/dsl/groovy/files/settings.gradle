@@ -1,0 +1,22 @@
+// The plugin and the API come from a repository rather than from a checkout
+// beside this one, so the project builds wherever it is cloned. Nothing has
+// been released yet, which means only the first line resolves anything today:
+// `./gradlew publishToMavenLocal` in a checkout of ancaria-dev/build puts the
+// plugin here, and the same command in a checkout of ancaria-dev/coderpack puts
+// the API here. The portal and Central below are where each comes from after
+// the first release; until then they resolve nothing and cost one lookup.
+pluginManagement {
+    repositories {
+        mavenLocal()
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+}
+
+rootProject.name = '{{id}}'
