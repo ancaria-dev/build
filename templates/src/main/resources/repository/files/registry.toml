@@ -1,0 +1,25 @@
+# This project is a mod repository as well as a mod, which is what lets somebody
+# install it from their launcher instead of hunting for a jar. The file a
+# launcher actually reads is sacred.mods.repository.json, and it is generated
+# from this one plus whatever was built:
+#
+#     gradlew assembleSacredMod
+#     coderpack index
+#
+# Nobody writes that json by hand. Every field describing a mod is copied out of
+# the descriptor inside its jar, so the version somebody is offered is the
+# version they get. Commit both files.
+#
+# An icon.png beside this file, square and under 256 KB, becomes the picture a
+# launcher draws next to this mod. Without one it draws its own mark, which is
+# fine and is what most mods will show for a while.
+#
+# url is the repository as a browser sees it, and every download link is built
+# from it, so it has to be right before anyone can install anything. `coderpack
+# new --repo <url>` fills it in; otherwise this line is the one thing here to
+# edit by hand.
+
+name = "{{name}}"
+description = "{{description}}"
+url = "{{repo}}"
+releases = "{{repo}}/releases/download/{id}-v{version}/{file}"
