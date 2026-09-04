@@ -1,9 +1,10 @@
 # {{name}}
 
+[![Sacred Community](https://img.shields.io/badge/Sacred-Community-C8912B?style=flat-square)](https://ancaria.dev)
+
 {{description}}
 
-The Sacred Mod Loader loads {{name}} while Sacred Gold is running. Created by
-{{author}}.
+A Sacred Gold mod by {{author}}.
 
 ## Build the mod
 
@@ -26,9 +27,15 @@ launcher, then start the game.
 
 ## Project layout
 
-```
-{{buildFile}}   the sacred { } block: id, displayName, entrypoint, version
-src/main/{{srcDir}}/{{packagePath}}/{{class}}.{{srcExt}}
+```text
+{{id}}/
+├── src/main/{{srcDir}}/{{packagePath}}/
+│   └── {{class}}.{{srcExt}}     entrypoint -- onLoad runs once
+├── {{buildFile}}                sacred { } block: id, displayName, entrypoint, version
+├── {{settingsFile}}
+├── registry.toml                SRML metadata, read by `coderpack index`
+├── .github/workflows/build.yml  builds, verifies, and releases on a version tag
+└── gradlew, gradlew.bat, gradle/wrapper/, .gitignore
 ```
 
 The loader calls `{{class}}.onLoad` once and passes it a `Context`. This minimal
