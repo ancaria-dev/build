@@ -3,6 +3,6 @@
         "editorconfig.editorconfig",
         "vscjava.vscode-gradle",
         "redhat.java",
-        "fwcd.kotlin"
+        "jetbrains.kotlin-server"
     ]
 }
