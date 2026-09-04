@@ -20,8 +20,14 @@
 
     // settings.gradle.kts is at gradle/, not at the repository root -- one build
     // per build system, so that build/maven can appear beside it later. Without
-    // this the Gradle extension finds no build to import.
-    "gradle.nestedProjects": true,
+    // this the Gradle extension finds no build to import. Naming the directory
+    // instead of using `true` stops it from also treating `verify/` and
+    // `templates/` as standalone nested projects (they only resolve
+    // `com.gradleup.nmcp` through gradle/'s plugin management, so importing
+    // them outside that context fails) and from treating every templated
+    // `build.gradle*` under `templates/src/main/resources/languages/` -- which
+    // still has unresolved `{{...}}` placeholders -- as a project at all.
+    "gradle.nestedProjects": ["gradle"],
     "java.configuration.updateBuildConfiguration": "automatic",
 
     "files.exclude": {
