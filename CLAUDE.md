@@ -65,8 +65,8 @@ runtime-dependency invariants as the Gradle path.
 The authoritative build properties are in `gradle/gradle.properties`:
 
 - group `dev.ancaria.coderpack`
-- plugin, verifier, templates, and command-line version `0.1.0`
-- API artifact version `0.1.0`
+- plugin, verifier, templates, and command-line version `0.99.0`
+- API artifact version `0.99.0`
 - API contract `1`, declared as `Verifier.API`
 - default API range `[1,2)`, derived as `Verifier.API_RANGE`
 
@@ -150,7 +150,7 @@ because this repository cannot establish which launcher releases exist.
 
 `apiVersion` names the Maven artifact
 `dev.ancaria.coderpack:api:<apiVersion>`. The plugin adds it as `compileOnly`
-only when the property has a value. Generated projects set it to `0.1.0`. The
+only when the property has a value. Generated projects set it to `0.99.0`. The
 loader already provides the API. Packing another copy can produce
 `ClassCastException` between classes with identical names.
 
@@ -209,6 +209,7 @@ A default project contains:
 - `build.gradle.kts`
 - `settings.gradle.kts`
 - `registry.toml`
+- `dependencies.json`
 - `.github/workflows/build.yml`
 - `gradlew` and `gradlew.bat`
 - `gradle/wrapper/gradle-wrapper.jar`
@@ -250,7 +251,7 @@ Five resource layers produce a project:
 Later, more specific layers can shadow earlier paths.
 
 `common/files/` currently contributes `_gitignore`. `repository/files/`
-contributes `registry.toml` and `_github/workflows/build.yml`.
+contributes `registry.toml`, `dependencies.json`, and `_github/workflows/build.yml`.
 
 Each template has `template.properties`, shared `files/`, and one
 `lang/<language>/` tree per supported entrypoint. Each language has
@@ -260,7 +261,7 @@ under `dsl/<dsl>/`. Each DSL has `dsl.properties` and a settings file below
 
 Entrypoints vary by template and language. Build scripts vary by language and
 DSL. Settings files vary only by DSL. The README, `.gitignore`, and SRML files
-are shared. The current source contains 26 indexed resource files after
+are shared. The current source contains 27 indexed resource files after
 dot-segment scratch files are excluded. It generates 12 template, language,
 and DSL combinations. A third template requires one properties file, one
 README, and three entrypoints. It does not require new build scripts, settings
@@ -379,11 +380,15 @@ coderpack index --check
 ```
 
 The generated workflow builds the mod, downloads `coderpack-*.zip` from the
-latest `ancaria-dev/build` release, runs `coderpack index --check`, and creates
-one release per new `<id>-v<version>` tag on the repository's default branch.
-It supports both single-mod and multi-mod layouts. `${{ github.token }}` is
+`ancaria-dev/build` release pinned in the generated `dependencies.json` (never
+"latest" -- a bad `build` release should not be able to break every SRML
+repository's CI at once), runs `coderpack index --check`, and creates one
+release per new `<id>-v<version>` tag on the repository's default branch. It
+supports both single-mod and multi-mod layouts. `${{ github.token }}` is
 enough. No separate secret is required. This workflow cannot work until the
-first `build` release exists.
+first `build` release exists. `dependencies.json` is written with `Versions.plugin`,
+so a generated project starts pinned to the toolchain that generated it;
+raising the pin later is a normal edit.
 
 ## Verifier contract
 
