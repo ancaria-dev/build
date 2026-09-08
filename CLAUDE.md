@@ -525,7 +525,11 @@ the exact findings count. Do not replace them with mocked jars.
 ## Publishing and release
 
 The release version lives only in `gradle/gradle.properties`. Raising that
-`version` is what makes CI eligible to publish.
+`version` is what makes CI eligible to publish. `tools/version.ps1` prints it
+with no argument, or raises both `version` and `apiVersion` together --
+plus the matching mentions in `Descriptor.kt`'s Javadoc and the three
+READMEs -- with `pwsh tools/version.ps1 0.99.1`. Edit `gradle.properties` by
+hand instead when the two numbers need to move apart.
 
 Local publication:
 
