@@ -155,7 +155,7 @@ abstract class Descriptor : DefaultTask() {
          * plugin compiles against and nothing else, which is what every
          * descriptor meant back when the field was a bare number.
          *
-         * Not the artifact version: `dev.ancaria.coderpack:api` is at 0.1.0 and
+         * Not the artifact version: `dev.ancaria.coderpack:api` is at 0.99.0 and
          * keeps moving, while this changes only when the contract breaks.
          *
          * An author may set `sacred.apiRange` and widen it, because they are the
