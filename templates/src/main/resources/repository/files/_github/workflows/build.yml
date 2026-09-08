@@ -40,11 +40,16 @@ jobs:
       - name: Build the mod
         run: ./gradlew assembleSacredMod --no-daemon
 
+      # Pinned in dependencies.json, written with the version of build that
+      # generated this project. Never "latest": bump the pin yourself when
+      # there is a reason to move, so a new build release cannot break this
+      # workflow without your say-so.
       - name: Get the coderpack command line
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download --repo ancaria-dev/build \
+          version=$(jq -r '.[] | select(.path=="ancaria-dev/build") | .version' dependencies.json)
+          gh release download --repo ancaria-dev/build --tag "v$version" \
             --pattern 'coderpack-*.zip' --dir .coderpack
           unzip -q .coderpack/coderpack-*.zip -d .coderpack
           echo "$PWD/$(echo .coderpack/coderpack-*/bin)" >> "$GITHUB_PATH"
