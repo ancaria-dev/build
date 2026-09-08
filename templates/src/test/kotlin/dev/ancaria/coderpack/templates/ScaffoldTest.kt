@@ -97,9 +97,9 @@ class ScaffoldTest {
      * A project that is a mod and nothing else.
      *
      * SRML is a layer rather than a template, so what this asserts is that
-     * dropping it drops exactly two files and touches nothing else: a project
-     * without a registry still has its build script, its entrypoint and its
-     * wrapper.
+     * dropping it drops exactly three files and touches nothing else: a
+     * project without a registry still has its build script, its entrypoint
+     * and its wrapper.
      */
     @Test
     fun `plans no registry and no workflow when SRML was not asked for`() {
@@ -107,7 +107,7 @@ class ScaffoldTest {
             val bare = Scaffold.plan(template, language, values, dsl, repository = false)
             val full = Scaffold.plan(template, language, values, dsl)
             assertEquals(
-                setOf("registry.toml", ".github/workflows/build.yml"),
+                setOf("registry.toml", ".github/workflows/build.yml", "dependencies.json"),
                 full.keys - bare.keys,
                 "$template/$language/$dsl"
             )

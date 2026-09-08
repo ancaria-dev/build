@@ -124,6 +124,7 @@ class NewTest {
         val target = new("private-mod", "--no-registry")
         assertFalse(target.resolve("registry.toml").exists())
         assertFalse(target.resolve(".github/workflows/build.yml").exists())
+        assertFalse(target.resolve("dependencies.json").exists())
         // Still a mod, and still one that builds.
         assertTrue(target.resolve("build.gradle.kts").exists())
         assertTrue(target.resolve("src/main/java/mods/privatemod/PrivateMod.java").exists())
@@ -203,6 +204,19 @@ class NewTest {
     fun `says which line to fix when nobody said where it will live`() {
         val registry = new("homeless").resolve("registry.toml").readText()
         assertTrue("github.com/you/homeless" in registry, registry)
+    }
+
+    // The generated CI downloads a pinned build release rather than "latest",
+    // and the version it pins is the one this tool was built beside -- not
+    // typed in the template, for the same reason build.gradle.kts isn't.
+    @Test
+    fun `pins the generated workflow's coderpack download to this build's own version`() {
+        val target = new("my-mod")
+        val pins = target.resolve("dependencies.json").readText()
+        assertTrue(
+            """"path": "ancaria-dev/build", "version": "${Versions.plugin}"""" in pins,
+            pins
+        )
     }
 
     @Test
