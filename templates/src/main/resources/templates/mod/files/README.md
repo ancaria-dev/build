@@ -35,6 +35,7 @@ then start the game.
 ├── {{settingsFile}}
 ├── registry.toml                SRML metadata, read by `coderpack index`
 ├── .github/workflows/build.yml  builds, verifies, and releases on a version tag
+├── dependencies.json            the coderpack version that workflow downloads
 └── gradlew, gradlew.bat, gradle/wrapper/, .gitignore
 ```
 
