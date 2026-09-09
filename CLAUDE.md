@@ -310,7 +310,13 @@ Java applies only `dev.ancaria.coderpack`. The plugin sets
 `JavaCompile.options.release = 21`.
 
 Kotlin applies `kotlin("jvm")`, uses
-`implementation(kotlin("stdlib"))`, and sets `jvmTarget` to `JVM_21`.
+`implementation(kotlin("stdlib"))`, and sets `jvmTarget` to `JVM_21`. It also
+declares `dev.ancaria.coderpack:api-kotlin` at `apiVersion`, which coderpack
+publishes beside the API and which the Kotlin entrypoints use. That one is
+`implementation` rather than `compileOnly` on purpose: the loader provides the
+API and does not provide this, so the mod packs it. It is inline extensions
+over the API and its package is `dev.ancaria.coderpack.ktx`, outside the
+package `Contents` refuses to find in a mod jar.
 
 Groovy applies `groovy`, uses
 `implementation("org.apache.groovy:groovy:5.1.1")`, and configures
@@ -511,6 +517,14 @@ list, generates the SRML index, and checks id, version, file name, and SHA-256.
 `api-<apiVersion>.jar`. Keep one API stub source instead of introducing a
 second copy.
 
+It also creates `apiKotlinStub` from `templates/src/apiKotlinStub/kotlin` and
+packages `api-kotlin-<apiVersion>.jar` into the same directory, because the test
+offers one `flatDir` repository and a generated Kotlin mod resolves both
+coordinates from it. That stub is written out rather than borrowed, since the
+linter's fixtures are Java. It holds exactly the declarations the Kotlin
+templates call and nothing else, so a template that starts using another
+extension has to add it there too or stop compiling.
+
 `NamesTest`, `ScaffoldTest`, and `NewTest` cover naming, all 12 combinations,
 placeholder precedence, unresolved placeholders, `${{ ... }}` preservation,
 target-directory safety, options, help, registry selection, resource discovery,
@@ -623,11 +637,18 @@ prerequisites because `:templates:test` resolves them like a generated mod.
 - Do not hand-edit `sacred.mods.repository.json`.
 - Classify a new verifier condition as `ERROR` only when runtime code rejects
   the same jar. Otherwise use `WARNING`.
+- Keep a library the loader does not provide out of
+  `dev/ancaria/coderpack/api/`. `Contents` refuses that package inside a mod
+  jar as an error, and a library a mod packs would make every mod using it
+  unbuildable. `api-kotlin` sits in `dev.ancaria.coderpack.ktx` for this
+  reason.
 
 ## Relations to other repositories
 
 This repository reads no sibling checkout and builds alone.
-`dev.ancaria.coderpack:api` is published by `coderpack`.
+`dev.ancaria.coderpack:api` and `dev.ancaria.coderpack:api-kotlin` are published
+by `coderpack`. Both are stubbed here for the end-to-end test, and a change to
+either one's shape reaches this repository only through those stubs.
 
 `launcher/tools/build.ps1` stages jars matching
 `<workspace>/mods/*/build/sacred-mod/*.jar`.
