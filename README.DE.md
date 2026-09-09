@@ -140,8 +140,11 @@ coderpack index
 ```
 
 Bei einem Push auf `main` oder `master` sowie bei einem Pull Request baut der
-mitgelieferte Workflow den Mod und gleicht den committeten Index mit dem JAR
-ab. Nur auf dem Default-Branch veröffentlicht er ein Release mit dem Tag
+mitgelieferte Workflow den Mod, erzeugt den Index aus dem soeben gebauten JAR
+neu und committet ihn. Verglichen wird nichts: ein JAR, das eine Sprachlaufzeit
+mitbringt, fällt von Rechner zu Rechner nicht Byte für Byte gleich aus, und ein
+Vergleich würde an korrekter Arbeit scheitern. Nur auf dem Default-Branch
+veröffentlicht er ein Release mit dem Tag
 `<id>-v<version>`, sofern dieser Tag noch nicht existiert. Zusätzliche Secrets
 sind nicht nötig, weil der von GitHub bereitgestellte Token Releases im eigenen
 Repository anlegen darf. Solange sich die Version nicht ändert, wird kein neues
@@ -153,8 +156,8 @@ JARs. Jeder Eintrag kann Name, Beschreibung, Version, API- und Loader-Bereich,
 Autoren, Website, Konflikte, Quellpfad und Icon enthalten. Dazu kommen
 Dateiname, Größe, SHA-256 und Download-URL. Im Wurzelobjekt steht das Feld
 `srml` auf `1`, neben Repository-Name, Beschreibung, URL, Icon und Mod-Liste. Ein
-Zeitstempel fehlt absichtlich, damit `coderpack index --check` die Ausgabe Byte
-für Byte vergleichen kann. Beide Dateien gehören in den Commit.
+Zeitstempel fehlt absichtlich, damit `coderpack index --check` für einen
+gegebenen Satz JAR-Dateien die Ausgabe Byte für Byte vergleichen kann. Beide Dateien gehören in den Commit.
 
 Nur `registry.toml` wird von Hand gepflegt:
 

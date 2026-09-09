@@ -378,18 +378,32 @@ Do not weaken an error to make publishing pass.
 
 `--check` writes nothing and returns `1` when the current
 `sacred.mods.repository.json` differs from generated output. The JSON has no
-timestamp so comparison remains deterministic. Do not edit it by hand. Fix the
-jar or `registry.toml`, run `coderpack index`, and commit the result.
+timestamp so the comparison is deterministic for one set of jars. Do not edit
+the file by hand. Fix the jar or `registry.toml`, run `coderpack index`, and
+commit the result.
 
 ```
 coderpack index --check
 ```
 
+`--check` is a local command and the generated workflow no longer runs it. The
+jars it compares are not reproducible across machines: a mod that packs a
+language runtime can come out a few bytes apart on a developer machine and on a
+runner, and then `--check` fails on work that is perfectly correct. That was
+the whole of the failure it kept reporting.
+
 The generated workflow builds the mod, downloads `coderpack-*.zip` from the
 `ancaria-dev/build` release pinned in the generated `dependencies.json` (never
 "latest": a bad `build` release should not be able to break every SRML
-repository's CI at once), runs `coderpack index --check`, and creates one
-release per new `<id>-v<version>` tag on the repository's default branch. It
+repository's CI at once), regenerates the index from the jar it just built and
+commits it back on the default branch, and creates one
+release per new `<id>-v<version>` tag on that branch. On a pull request it
+generates the index without comparing or committing it, which still fails on an
+unreadable `registry.toml`, a duplicate mod id, or a jar the linter refuses.
+The regeneration step runs before the release step, so a tag points at a commit
+whose index describes the jar being released. The commit is made with the
+workflow token, and a push made with that token starts no workflow run, so it
+does not loop. The checkout sets `persist-credentials: true` for it. It
 supports both single-mod and multi-mod layouts. `${{ github.token }}` is
 enough. No separate secret is required. This workflow cannot work until the
 first `build` release exists. `dependencies.json` is written with `Versions.plugin`,
