@@ -293,7 +293,7 @@ Ein kompaktes `build.gradle.kts` kann mit Beispielwerten so aussehen:
 
 ```kotlin
 plugins {
-    id("dev.ancaria.coderpack") version "0.100.1"
+    id("dev.ancaria.coderpack") version "0.100.2"
 }
 
 version = "1.0.0"
