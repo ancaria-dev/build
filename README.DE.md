@@ -75,6 +75,18 @@ letzte Pfad `src/main/kotlin/mods/mymod/MyMod.kt`, und das Build-Skript wendet
 zusätzlich das Kotlin-Plugin an. `--language groovy` erzeugt entsprechend eine
 `.groovy`-Datei.
 
+Ein Kotlin-Projekt bekommt eine Abhängigkeit, die die beiden anderen nicht
+haben: `dev.ancaria.coderpack:api-kotlin`, dieselbe Loader-API in Kotlin. Der
+Einstiegspunkt erbt von der Klasse `SacredMod` aus diesem Modul, die den
+Context festhält und ihn `Context.load()` als Receiver übergibt, und meldet
+seinen Listener als `on<Hero> { }` statt als annotierte Methode an. Das Modul
+kann nichts, was die Java-API nicht kann: jede Deklaration ruft eine Methode
+dort auf, und ein Feld, das die API überschreiben lässt, ist ein `var`, sodass
+eine Änderung `it.delta *= 2` lautet. Die Abhängigkeit zu streichen und
+stattdessen `@Subscribe` zu schreiben, ist ein unterstützter Weg zu einem
+Kotlin-Mod. Eingebunden wird es als `implementation`, nicht als `compileOnly`,
+weil der Loader einem Mod die API reicht und dieses Modul nicht.
+
 Die Sprache des Build-Skripts wird unabhängig davon gewählt. `--dsl groovy`
 schreibt `build.gradle` und `settings.gradle` anstelle der beiden
 `.kts`-Dateien. Ein Java-Mod kann also mit Groovy DSL gebaut werden, ein

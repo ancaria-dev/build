@@ -66,6 +66,17 @@ Java is the default language. `--language kotlin` writes
 `src/main/kotlin/mods/mymod/MyMod.kt` and configures the Kotlin plugin.
 `--language groovy` does the same for Groovy.
 
+A Kotlin project gets one dependency the other two do not:
+`dev.ancaria.coderpack:api-kotlin`, the loader API said in Kotlin. Its
+entrypoint extends the `SacredMod` class from that module, which keeps the
+context and hands it to `Context.load()` as a receiver, and registers its
+listener as `on<Hero> { }` rather than as an annotated method. It adds no
+capability: every declaration in it forwards to the Java API, and a field the
+API lets a listener rewrite is a `var`, so a rewrite reads `it.delta *= 2`.
+Deleting the dependency and writing `@Subscribe` instead is a supported way to
+have a Kotlin mod. The module is `implementation`, not `compileOnly`, because
+the loader hands a mod the API and not this.
+
 The build script language is a separate choice. `--dsl groovy` writes
 `build.gradle` and `settings.gradle` instead of the `.kts` files. Without that
 option, the project uses Kotlin DSL. Any supported mod language can be paired
@@ -314,7 +325,9 @@ the path instead:
 | `installSacredMod` | Copies that jar to `installTo` |
 
 The plugin applies `java` and `com.gradleup.shadow`. A Kotlin or Groovy mod adds
-its own language plugin. Java uses `options.release = 21`. Generated Kotlin
+its own language plugin, and a Kotlin one also adds `api-kotlin`, which is
+packed like any other runtime dependency; it is inline extensions over the API,
+so what reaches the jar is small. Java uses `options.release = 21`. Generated Kotlin
 projects set `jvmTarget = JVM_21`, while Groovy projects set
 `sourceCompatibility`, `targetCompatibility`, and `options.release` to 21.
 Their standard libraries use `implementation`, so Shadow packs them.
