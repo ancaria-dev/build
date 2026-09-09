@@ -138,9 +138,11 @@ SHA-256 hash, and release URL. The root object's `srml` field is `1`, alongside 
 repository name, description, URL, icon, and mod array. The output has no
 timestamp, so `coderpack index --check` can compare it byte for byte for one
 set of jars. The generated workflow does not run that comparison: on the
-default branch it regenerates the index from the jar it just built and commits
-it, because a mod jar carrying a language runtime is not reproducible from one
-machine to the next, and comparing it fails on correct work.
+default branch it writes the index and commits it, because a mod jar carrying a
+language runtime is not reproducible from one machine to the next and comparing
+it fails on correct work. It indexes an already released mod from the JAR on
+that release and a version with no tag yet from the JAR it is about to publish,
+so the checksum always describes the file the download URL serves.
 
 `registry.toml` is the hand-maintained part:
 

@@ -395,9 +395,16 @@ the whole of the failure it kept reporting.
 The generated workflow builds the mod, downloads `coderpack-*.zip` from the
 `ancaria-dev/build` release pinned in the generated `dependencies.json` (never
 "latest": a bad `build` release should not be able to break every SRML
-repository's CI at once), regenerates the index from the jar it just built and
-commits it back on the default branch, and creates one
-release per new `<id>-v<version>` tag on that branch. On a pull request it
+repository's CI at once), writes the index and commits it back on the default
+branch, and creates one release per new `<id>-v<version>` tag on that branch.
+
+The index has to describe the jar behind each download URL, because a launcher
+refuses a download whose sha256 is not the one the index published. So the
+workflow indexes a mod whose tag already exists from the asset on that release,
+and only a version with no tag yet from the jar just built, which is the jar the
+release step is about to attach. Changing a mod without raising its version then
+moves nothing that is published. The staged jars go to `coderpack index --jars`,
+so the file is always written by the generator and its formatting cannot drift. On a pull request it
 generates the index without comparing or committing it, which still fails on an
 unreadable `registry.toml`, a duplicate mod id, or a jar the linter refuses.
 The regeneration step runs before the release step, so a tag points at a commit
