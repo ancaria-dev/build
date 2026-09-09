@@ -254,7 +254,7 @@ rootProject.name = "my-mod"
 
 ```kotlin
 plugins {
-    id("dev.ancaria.coderpack") version "0.100.0"
+    id("dev.ancaria.coderpack") version "0.100.1"
 }
 
 version = "1.0.0"
