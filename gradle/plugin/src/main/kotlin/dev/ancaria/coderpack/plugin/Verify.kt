@@ -15,9 +15,9 @@ import org.gradle.api.tasks.TaskAction
 /**
  * Runs the linter over the packed mod.
  *
- * The library does the work; this is the Gradle half of it. It reads one jar
+ * The library does the work. This is the Gradle half of it. It reads one jar
  * and writes one report, holds nothing but properties, and never touches
- * `project` in its action -- this build runs with the configuration cache and
+ * `project` in its action. This build runs with the configuration cache and
  * `problems=fail`, so a task that did would break it here rather than in
  * somebody's mod build.
  *
@@ -47,7 +47,7 @@ abstract class Verify : DefaultTask() {
         if (!result.ok()) {
             throw GradleException(text)
         }
-        // Warnings are worth reading once; a clean run is worth nothing on
+        // Warnings are worth reading once. A clean run is worth nothing on
         // screen, and `--info` is where somebody who wants it will look.
         if (result.count(Level.WARNING) > 0) logger.lifecycle(text) else logger.info(text)
     }

@@ -5,11 +5,11 @@ package dev.ancaria.coderpack.templates
  *
  * There is no JSON anywhere else in this tool and no library on its classpath,
  * and a registry index is an object of six fields holding an array of objects of
- * strings and numbers. Writing that is thirty lines; taking a dependency for it
+ * strings and numbers. Writing that is thirty lines. Taking a dependency for it
  * would put a serialiser into every mod build that resolves the plugin.
  *
  * Only the writing side exists. Nothing here reads JSON back, because the file
- * this produces is generated and never edited by hand -- what a human writes is
+ * this produces is generated and never edited by hand. What a human writes is
  * `registry.toml`, in the format every other descriptor in this project uses.
  */
 object Json {

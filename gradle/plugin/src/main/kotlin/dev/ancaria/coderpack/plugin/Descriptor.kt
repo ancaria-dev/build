@@ -18,7 +18,7 @@ import org.gradle.api.tasks.TaskAction
  * Writes `META-INF/declaration.toml` into a directory that becomes a resource root.
  *
  * The descriptor is generated rather than kept by hand because it repeats things
- * the build already knows -- the version above all -- and a version that
+ * the build already knows (the version above all) and a version that
  * disagrees with the jar it is inside is a bug nobody sees until a player
  * reports the wrong number in the launcher.
  */
@@ -161,7 +161,7 @@ abstract class Descriptor : DefaultTask() {
          * An author may set `sacred.apiRange` and widen it, because they are the
          * only one who can know whether their code survives the next major. What
          * they may not do is name a contract nothing here compiled against, and
-         * `generate` above refuses that before it writes a line -- the loader
+         * `generate` above refuses that before it writes a line. The loader
          * believes the descriptor, so a claim in it has to be one somebody could
          * check.
          *

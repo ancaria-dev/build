@@ -30,7 +30,7 @@ then start the game.
 ```text
 {{id}}/
 ├── src/main/{{srcDir}}/{{packagePath}}/
-│   └── {{class}}.{{srcExt}}     entrypoint -- onLoad runs once, register listeners here
+│   └── {{class}}.{{srcExt}}     entrypoint: onLoad runs once, register listeners here
 ├── {{buildFile}}                sacred { } block: id, displayName, entrypoint, version
 ├── {{settingsFile}}
 ├── registry.toml                SRML metadata, read by `coderpack index`

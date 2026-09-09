@@ -19,7 +19,7 @@ import kotlin.test.assertTrue
  * the jar that comes out with the linter.
  *
  * Every unit test above can pass while the generated project does not resolve,
- * does not compile, or packs something the loader refuses -- and that project is
+ * does not compile, or packs something the loader refuses, and that project is
  * the whole product. The plugin comes out of the local Maven repository, which
  * is how a mod author gets it, so `:plugin` and `:verify` are published there
  * before this runs.
@@ -27,7 +27,7 @@ import kotlin.test.assertTrue
  * Once per language, because a language is exactly the part of a template that
  * a unit test cannot check: whether the compiler was told to emit Java 21, and
  * whether the runtime it needs is inside the jar rather than merely on the
- * compile classpath. `findings()` being empty covers both -- the linter warns on
+ * compile classpath. `findings()` being empty covers both: the linter warns on
  * a class file above 65 and errors on an entrypoint it cannot resolve.
  *
  * And once per build DSL on top of that, for the same reason one level down: a

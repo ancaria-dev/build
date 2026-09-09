@@ -16,7 +16,7 @@ import java.util.Map;
  * the same way.
  *
  * <p>Nothing here loads a class. Every answer comes out of the bytecode, so a
- * static initialiser in a mod -- or in a jar that came from a stranger -- never
+ * static initialiser in a mod, or in a jar that came from a stranger, never
  * gets to run in the process doing the checking.
  */
 public final class Verifier {
@@ -27,7 +27,7 @@ public final class Verifier {
      *
      * <p>The one copy in this repository. {@code Descriptor.API} in the Gradle
      * plugin reads it from here, so the number stamped into a mod and the number
-     * this linter demands cannot drift apart -- a drift that would fail every
+     * this linter demands cannot drift apart, a drift that would fail every
      * jar the plugin builds. Raising it is one edit here, one in
      * {@code Api.VERSION} in coderpack and one in {@code mods.API} in the
      * launcher.
@@ -51,7 +51,7 @@ public final class Verifier {
      * <p>Used twice: by the linter on a packed jar, and by the Gradle plugin on
      * what an author wrote, before it is written into a descriptor at all. A mod
      * author may narrow or widen the range they claim, but not to something this
-     * toolchain cannot vouch for -- a build that compiles against API 1 and
+     * toolchain cannot vouch for: a build that compiles against API 1 and
      * declares API 2 is a claim nobody checked.
      *
      * @throws IllegalArgumentException when the text is not a range

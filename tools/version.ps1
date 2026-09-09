@@ -49,7 +49,7 @@ foreach ($path in $targets) {
     $text = Get-Content -Path $path -Raw
     $new = [regex]::Replace($text, $pattern, $Version)
     if ($new -eq $text) {
-        Write-Warning "$current not found in $path -- left untouched"
+        Write-Warning "$current not found in $path, left untouched"
         continue
     }
     Set-Content -Path $path -Value $new -NoNewline

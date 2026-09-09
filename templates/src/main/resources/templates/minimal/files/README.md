@@ -30,7 +30,7 @@ launcher, then start the game.
 ```text
 {{id}}/
 ├── src/main/{{srcDir}}/{{packagePath}}/
-│   └── {{class}}.{{srcExt}}     entrypoint -- onLoad runs once
+│   └── {{class}}.{{srcExt}}     entrypoint: onLoad runs once
 ├── {{buildFile}}                sacred { } block: id, displayName, entrypoint, version
 ├── {{settingsFile}}
 ├── registry.toml                SRML metadata, read by `coderpack index`

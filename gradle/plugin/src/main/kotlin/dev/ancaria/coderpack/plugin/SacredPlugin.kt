@@ -31,7 +31,7 @@ import org.gradle.language.jvm.tasks.ProcessResources
  *
  * The only language plugin applied here is `java`, which every JVM language
  * plugin builds on. Kotlin, Groovy and Scala mods work by adding their own
- * plugin next to this one; their sources compile into the same jar and this
+ * plugin next to this one. Their sources compile into the same jar and this
  * plugin never has to know which one is in use.
  */
 class SacredPlugin : Plugin<Project> {
@@ -63,7 +63,7 @@ class SacredPlugin : Plugin<Project> {
 
         // compileOnly on purpose: the loader already has the API on its own
         // classpath, and a second copy inside the mod jar would be a different
-        // class with the same name -- a ClassCastException between two things
+        // class with the same name, a ClassCastException between two things
         // that are obviously the same type. Nothing is added when no version is
         // set, because during development the API is usually a local jar.
         target.dependencies.addProvider(
@@ -99,7 +99,7 @@ class SacredPlugin : Plugin<Project> {
             // named after the mod, not the one with `-all` stuck on the end.
             archiveClassifier.set("")
             // Shadow's transformers merge the files that are meant to appear in
-            // several jars at once -- service registrations, and the
+            // several jars at once: service registrations, and the
             // `.kotlin_module` files a Kotlin mod brings in with the standard
             // library. They only see an entry the copy hands them, and the
             // default strategy drops the second one first, which Shadow itself
@@ -107,7 +107,7 @@ class SacredPlugin : Plugin<Project> {
             duplicatesStrategy = DuplicatesStrategy.INCLUDE
             archiveBaseName.set(mod.id.orElse(target.name))
             // Signatures belong to the jars the classes came from and mean
-            // nothing once those classes are inside a different jar; leaving
+            // nothing once those classes are inside a different jar. Leaving
             // them in makes the class loader reject the lot.
             exclude("META-INF/*.SF", "META-INF/*.DSA", "META-INF/*.RSA")
             // Several module descriptors in one jar describe nothing. Mods are

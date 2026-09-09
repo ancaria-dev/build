@@ -29,8 +29,8 @@ val apiVersion = property("apiVersion") as String
 
 dependencies {
     // `embedded-kotlin` puts the standard library on the compile classpath only,
-    // because a Gradle plugin is handed one at run time. This is not a plugin --
-    // it is a script somebody runs -- so the same version goes in the
+    // because a Gradle plugin is handed one at run time. This is not a plugin,
+    // it is a script somebody runs, so the same version goes in the
     // distribution as well.
     implementation(embeddedKotlin("stdlib"))
     // The linter, whole. `coderpack verify` is the same library the Gradle task
@@ -68,8 +68,8 @@ application {
  *
  * A jar cannot be asked what is in one of its packages, so a scaffolder either
  * knows its templates by name in code or reads an index. This produces the
- * index from the directory, which is what makes a new template -- and a new
- * language -- a matter of adding files: nothing in `Templates.kt` or
+ * index from the directory, which is what makes a new template (and a new
+ * language) a matter of adding files: nothing in `Templates.kt` or
  * `Languages.kt` ever learns a name.
  */
 abstract class ResourceIndex : DefaultTask() {
@@ -88,8 +88,8 @@ abstract class ResourceIndex : DefaultTask() {
             .map { it.relativeTo(root).invariantSeparatorsPath }
             // A template spells a dotfile with a leading `_` and Scaffold puts
             // the dot back, so nothing here is meant to start with one. What
-            // does is somebody's tool leaving scratch behind -- a `.gradle`
-            // lock file under a `files/` tree -- and indexing it would copy it
+            // does is somebody's tool leaving scratch behind, a `.gradle`
+            // lock file under a `files/` tree, and indexing it would copy it
             // into every project this tool writes.
             .filterNot { path -> path.split('/').any { it.startsWith(".") } }
             .sorted().toList()
@@ -179,7 +179,7 @@ tasks.named<Jar>("sourcesJar") {
 
 publishing {
     // No repository block. Central is not a repository a publish task writes
-    // to -- the Portal takes one signed bundle over its own API, and that is
+    // to. The Portal takes one signed bundle over its own API, and that is
     // what the aggregation at the root does.
     publications {
         create<MavenPublication>("maven") {

@@ -170,7 +170,7 @@ class SacredPluginTest {
     /**
      * A mod that spans two majors, and one that names a launcher release. Both
      * are the author's words, and an extension property that is not wired into
-     * the `@CacheableTask` is silently ignored -- so the check is the descriptor
+     * the `@CacheableTask` is silently ignored, so the check is the descriptor
      * on disk, not the extension.
      */
     @Test
@@ -223,7 +223,7 @@ class SacredPluginTest {
     /**
      * The one thing an author may not do. The loader believes the descriptor, so
      * a range claiming a contract nothing here compiled against is a promise
-     * nobody checked -- and it fails on the line they typed rather than on the
+     * nobody checked, and it fails on the line they typed rather than on the
      * jar three tasks later.
      */
     @Test

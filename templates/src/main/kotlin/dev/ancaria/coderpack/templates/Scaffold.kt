@@ -30,8 +30,8 @@ object Scaffold {
         repository: Boolean = true,
     ): Map<String, ByteArray> {
         // The DSL and the language fill in what a file shared between them
-        // cannot know -- which build file, which source directory, which file
-        // extension, which compiler version -- and both lose every argument
+        // cannot know (which build file, which source directory, which file
+        // extension, which compiler version) and both lose every argument
         // with what the caller asked for.
         val all = Dsls.values(dsl) + Languages.values(language) + values
         val files = sortedMapOf<String, ByteArray>()

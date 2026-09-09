@@ -21,7 +21,7 @@ final class Contents implements Check {
 
     /**
      * The API must come from the loader and only from the loader. A mod is
-     * loaded by its own class loader; a copy of the API inside the jar is a
+     * loaded by its own class loader. A copy of the API inside the jar is a
      * second class with the same name, and the first symptom is a
      * ClassCastException between two types that are obviously identical.
      */

@@ -386,7 +386,7 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':verifySacredMod' (registered by plugin 'dev.ancaria.coderpack').
 > my-mod-1.0.0.jar: 1 error
-    error   listener    demo.MyMod.onHero takes 2 parameters; the bus registers a listener with exactly one, and the parameter is what it subscribes to
+    error   listener    demo.MyMod.onHero takes 2 parameters. The bus registers a listener with exactly one, and the parameter is what it subscribes to
 ```
 
 Derselbe Code läuft von der Kommandozeile, und so prüft ein Mod-Repository einen

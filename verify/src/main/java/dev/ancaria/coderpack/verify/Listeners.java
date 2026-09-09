@@ -36,7 +36,7 @@ final class Listeners implements Check {
         Type[] parameters = Type.getArgumentTypes(method.descriptor());
         if (parameters.length != 1) {
             found.add(Finding.error("listener", where + " takes " + parameters.length
-                    + " parameters; the bus registers a listener with exactly one, and"
+                    + " parameters. The bus registers a listener with exactly one, and"
                     + " the parameter is what it subscribes to"));
         } else if (!isEvent(mod, parameters[0])) {
             found.add(Finding.error("listener", where + " takes "

@@ -356,7 +356,7 @@ FAILURE: Build failed with an exception.
 * What went wrong:
 Execution failed for task ':verifySacredMod' (registered by plugin 'dev.ancaria.coderpack').
 > my-mod-1.0.0.jar: 1 error
-    error   listener    demo.MyMod.onHero takes 2 parameters; the bus registers a listener with exactly one, and the parameter is what it subscribes to
+    error   listener    demo.MyMod.onHero takes 2 parameters. The bus registers a listener with exactly one, and the parameter is what it subscribes to
 ```
 
 The command-line entrypoint runs the same checks:
@@ -475,7 +475,7 @@ as a generated mod.
 
 That is enough for a mod on the same machine. For a release, CI reads `version`
 from `gradle/gradle.properties` on pushes to `master`. If `v<version>` does not
-exist, it publishes to two places -- the linter and the scaffolder to Maven
+exist, it publishes to two places: the linter and the scaffolder to Maven
 Central as one signed bundle, the plugin to the Gradle Plugin Portal, which is
 where `id("dev.ancaria.coderpack")` resolves from and the only place it does --
 then creates that tag and attaches `coderpack-<version>.zip` to the GitHub

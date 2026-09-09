@@ -70,14 +70,14 @@ abstract class SacredExtension {
      * every mod: the contract changes major exactly when something a mod calls
      * stops being there.
      *
-     * Widening it is a promise, and it is the author's to make -- they are the
+     * Widening it is a promise, and it is the author's to make. They are the
      * only one who knows whether their code stays inside the part of the API
      * that did not move. What it cannot do is claim a contract this toolchain
      * did not compile against: `verifySacredMod` fails a jar whose range does
      * not contain the API the build resolved, because a version stamped by
      * somebody with no way to check it is worse than no version at all.
      *
-     * The notation is Maven's, the one NeoForge writes; `Ranges` in the linter
+     * The notation is Maven's, the one NeoForge writes. `Ranges` in the linter
      * documents it.
      */
     abstract val apiRange: Property<String>
@@ -87,7 +87,7 @@ abstract class SacredExtension {
      *
      * Unset, and nothing is written: most mods have no opinion about the
      * launcher's version number and should not have to invent one. Set it when
-     * the mod needs something a particular release added -- `[0.2.0,)` -- and
+     * the mod needs something a particular release added (`[0.2.0,)`) and
      * the launcher will list the mod, refuse to enable it, and say which release
      * it asked for.
      *
@@ -99,7 +99,7 @@ abstract class SacredExtension {
 
     /**
      * Adds the loader API as a compile-only dependency when set. Left alone, the
-     * build declares its own -- a local jar works exactly as well as a
+     * build declares its own: a local jar works exactly as well as a
      * coordinate, and during development it is usually a local jar.
      */
     abstract val apiVersion: Property<String>

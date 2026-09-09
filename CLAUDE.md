@@ -381,7 +381,7 @@ coderpack index --check
 
 The generated workflow builds the mod, downloads `coderpack-*.zip` from the
 `ancaria-dev/build` release pinned in the generated `dependencies.json` (never
-"latest" -- a bad `build` release should not be able to break every SRML
+"latest": a bad `build` release should not be able to break every SRML
 repository's CI at once), runs `coderpack index --check`, and creates one
 release per new `<id>-v<version>` tag on the repository's default branch. It
 supports both single-mod and multi-mod layouts. `${{ github.token }}` is
@@ -528,7 +528,7 @@ The release version lives only in `gradle/gradle.properties`. Raising that
 `version` is what makes CI eligible to publish. `tools/version.ps1` prints it
 with no argument, or raises both `version` and `apiVersion` together --
 plus the matching mentions in `Descriptor.kt`'s Javadoc and the three
-READMEs -- with `pwsh tools/version.ps1 0.99.1`. Edit `gradle.properties` by
+READMEs, with `pwsh tools/version.ps1 0.99.1`. Edit `gradle.properties` by
 hand instead when the two numbers need to move apart.
 
 Local publication:
@@ -562,8 +562,8 @@ unchanged builds but does not publish.
 `nmcpZipAggregation` builds the Central bundle locally without uploading it,
 which is how to check what a release would contain. `publishingType` in
 `gradle/build.gradle.kts` is `USER_MANAGED`, so an upload waits in the portal
-for somebody to press Publish; a Central artifact can never be deleted. The
-plugin is not in that bundle on purpose -- the portal hosts it, and the portal
+for somebody to press Publish. A Central artifact can never be deleted. The
+plugin is not in that bundle on purpose: the portal hosts it, and the portal
 proxies Central for the `verify` dependency its POM names.
 
 Publish `plugin`, `verify`, and `templates` together at the same version. The

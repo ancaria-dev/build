@@ -5,7 +5,7 @@ package dev.ancaria.coderpack.templates
  *
  * One command has to be enough, and a project that then asks for a system
  * Gradle of the right version is not one command. So the wrapper travels
- * inside this tool -- but not as a second copy checked in beside the templates:
+ * inside this tool, but not as a second copy checked in beside the templates:
  * the build stages this repository's own `gradlew`, `gradlew.bat` and
  * `gradle-wrapper.jar` as resources, so the distribution a generated mod
  * downloads is the one this build is tested with, and there is nothing to keep

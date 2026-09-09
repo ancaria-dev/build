@@ -113,7 +113,7 @@ object Registry {
             }
             return dir.listFiles { file: File -> file.extension == "jar" }?.toList().orEmpty()
         }
-        // A repository of several mods keeps each in a directory of its own; one
+        // A repository of several mods keeps each in a directory of its own. One
         // written by `coderpack new` is a single mod at the root, and its jar
         // lands one level higher. Both layouts come out of this same tool, so
         // both are looked for rather than one being the real one.

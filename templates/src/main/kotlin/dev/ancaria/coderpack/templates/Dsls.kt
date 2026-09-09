@@ -6,12 +6,12 @@ package dev.ancaria.coderpack.templates
  * A directory, the way a template and a language are: `dsl/<name>/files/` is
  * copied into every project written in that syntax, which today is the settings
  * file, and `dsl.properties` says what it is. The build script itself is not
- * here, because it varies by language as well -- a Kotlin mod applies the
- * Kotlin plugin whichever syntax the script is typed in -- so it sits under
+ * here, because it varies by language as well: a Kotlin mod applies the
+ * Kotlin plugin whichever syntax the script is typed in, so it sits under
  * `languages/<language>/dsl/<dsl>/` and there is one of it per pair.
  *
  * This is not the same question as [Languages]. That one is what the mod is
- * written in and reaches the player as bytecode; this one is what the build
+ * written in and reaches the player as bytecode. This one is what the build
  * file is written in and reaches nobody. A Java mod with a `build.gradle` and a
  * Kotlin mod with a `build.gradle.kts` are both ordinary.
  *

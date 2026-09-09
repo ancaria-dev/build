@@ -115,8 +115,8 @@ class NewTest {
     /**
      * A mod on its own, with nobody to install it from.
      *
-     * The default is the other way round on purpose -- a mod nobody can install
-     * is a mod nobody has -- so this is the flag, and what it drops is the SRML
+     * The default is the other way round on purpose: a mod nobody can install
+     * is a mod nobody has, so this is the flag, and what it drops is the SRML
      * half and nothing else.
      */
     @Test
@@ -207,7 +207,7 @@ class NewTest {
     }
 
     // The generated CI downloads a pinned build release rather than "latest",
-    // and the version it pins is the one this tool was built beside -- not
+    // and the version it pins is the one this tool was built beside, not
     // typed in the template, for the same reason build.gradle.kts isn't.
     @Test
     fun `pins the generated workflow's coderpack download to this build's own version`() {

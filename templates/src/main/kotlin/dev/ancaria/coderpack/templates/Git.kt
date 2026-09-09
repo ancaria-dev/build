@@ -9,7 +9,7 @@ import java.io.IOException
  *
  * Nothing here fails a run. The project is already on disk by the time any of
  * it happens, and a machine without git on the PATH has a perfectly good
- * project that is simply not a repository yet -- so this reports a line and
+ * project that is simply not a repository yet, so this reports a line and
  * gets out of the way rather than throwing after the fact.
  *
  * No commit is made. What goes in the first commit, and under whose name, is

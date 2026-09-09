@@ -21,7 +21,7 @@ nmcpAggregation {
         username = providers.environmentVariable("CENTRAL_USERNAME")
         password = providers.environmentVariable("CENTRAL_PASSWORD")
 
-        // The upload is automatic; the release is one click in the portal. A
+        // The upload is automatic. The release is one click in the portal. A
         // Central artifact can never be deleted, so the first few releases are
         // worth looking at before they are permanent. Change this to
         // "AUTOMATIC" once the shape of a deployment is known to be right, and

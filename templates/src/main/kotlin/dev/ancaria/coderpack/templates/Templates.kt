@@ -7,7 +7,7 @@ package dev.ancaria.coderpack.templates
  * copied into the new project whichever language it is written in;
  * `<name>/lang/<language>/` is copied only for that one, and holds the one
  * thing no two languages can share, which is the source of the entrypoint. What
- * varies by language and not by template -- the build script -- comes from
+ * varies by language and not by template (the build script) comes from
  * [Languages] instead, so neither part is written out twice.
  *
  * What varies by neither is [COMMON], written into every project whatever it
@@ -15,7 +15,7 @@ package dev.ancaria.coderpack.templates
  * file went to [Dsls], since its name and its syntax are the one thing a build
  * DSL decides on its own, and [REPOSITORY] is asked for rather than given.
  *
- * [REPOSITORY] is the SRML half -- the `registry.toml` a launcher is pointed at
+ * [REPOSITORY] is the SRML half: the `registry.toml` a launcher is pointed at
  * and the workflow that cuts the releases it links to. It is a layer rather
  * than a template because it is orthogonal to all three of the others: any
  * template, in any language, in either syntax, is either a mod somebody

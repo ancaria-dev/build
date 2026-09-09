@@ -9,7 +9,7 @@ import java.nio.file.Path
  * picture.
  *
  * The library does all of it. This reads the arguments and turns the report
- * into an exit code -- 1 when a jar carries an error, so a CI job needs no
+ * into an exit code: 1 when a jar carries an error, so a CI job needs no
  * `if` around it. Warnings are printed and change nothing: a release stops for
  * a jar that will not load, not for one that will.
  */

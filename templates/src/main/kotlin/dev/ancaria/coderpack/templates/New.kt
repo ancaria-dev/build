@@ -17,7 +17,7 @@ import java.nio.file.Path
  * somebody asks for `build.gradle` instead.
  *
  * `--no-registry` writes a mod and nothing else. Without it the project is also
- * an SRML repository -- a `registry.toml` and a workflow that cuts releases --
+ * an SRML repository, a `registry.toml` and a workflow that cuts releases,
  * so a launcher can be pointed straight at it and a mod nobody can install is
  * not the default outcome.
  */

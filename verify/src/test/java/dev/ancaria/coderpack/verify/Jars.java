@@ -35,7 +35,7 @@ final class Jars {
     /**
      * @param declaration the descriptor, or null for a jar without one
      * @param entries     paths inside the jar. One ending in {@code .class} is
-     *                    copied from the fixtures; anything else is written
+     *                    copied from the fixtures. Anything else is written
      *                    empty, which is all a signature file has to be.
      */
     static Path build(Path directory, String name, String declaration, String... entries) {

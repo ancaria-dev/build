@@ -25,7 +25,7 @@ dependencies {
 // No toolchain block anywhere in this build: a toolchain that is not installed
 // sends Gradle looking for one to download, and a build tool that needs the
 // network to compile a hello-world is a bad first impression. The JDK running
-// Gradle compiles it, and the targets below settle what it produces -- without
+// Gradle compiles it, and the targets below settle what it produces.  Without
 // them a JDK 25 build emits class files that CI's Temurin 21 cannot read.
 kotlin {
     compilerOptions {

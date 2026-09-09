@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  * mod table on it, so it has to survive a file, a config line and a command
  * line unchanged: lowercase letters, digits and inner hyphens.
  *
- * <p>Three things ask this question -- the Gradle plugin before it writes a
+ * <p>Three things ask this question: the Gradle plugin before it writes a
  * descriptor, this linter after somebody else wrote one, and the scaffolder
  * before it writes a project. They ask it here so a fourth answer cannot appear.
  */

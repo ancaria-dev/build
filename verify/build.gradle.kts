@@ -15,8 +15,8 @@ version = property("version") as String
 
 dependencies {
     // ASM reads a class file without loading it. Nothing else in this build has
-    // it -- Gradle keeps its own copy relocated where a plugin cannot reach it,
-    // and Shadow does not put one on our classpath -- so it is declared here and
+    // it: Gradle keeps its own copy relocated where a plugin cannot reach it,
+    // and Shadow does not put one on our classpath, so it is declared here and
     // travels to the plugin as a transitive dependency.
     implementation(libs.asm)
 }
@@ -35,9 +35,9 @@ tasks.withType<JavaCompile>().configureEach {
 
 // Fixture code, compiled by javac like anything else: a mod, a stub of the API
 // it is written against, and a handful of classes that each get one rule wrong.
-// The tests pack these class files into jars; nothing here ships. The API half
+// The tests pack these class files into jars. Nothing here ships. The API half
 // of it is compiled a second time by :templates, which packs it as an api jar
-// for the scaffolded mod in its end-to-end test to compile against -- one stub
+// for the scaffolded mod in its end-to-end test to compile against: one stub
 // of the API in this repository rather than two that drift.
 val fixtures = sourceSets.create("fixtures")
 
@@ -98,7 +98,7 @@ signing {
 
 publishing {
     // No repository block. Central is not a repository a publish task writes
-    // to -- the Portal takes one signed bundle over its own API, and that is
+    // to. The Portal takes one signed bundle over its own API, and that is
     // what the aggregation at the root does.
     publications {
         create<MavenPublication>("maven") {

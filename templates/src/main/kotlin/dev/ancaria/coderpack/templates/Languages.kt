@@ -6,9 +6,9 @@ package dev.ancaria.coderpack.templates
  * A language is a directory, the way a template is: `languages/<name>/files/`
  * is copied into every project written in that language, and
  * `language.properties` says what it is. The build script lives here rather
- * than in a template because that is where it actually varies -- a Kotlin mod
+ * than in a template because that is where it actually varies: a Kotlin mod
  * applies the Kotlin plugin and packs the standard library whichever template
- * it came from -- so there is one of it per language instead of one per pair.
+ * it came from, so there is one of it per language instead of one per pair.
  * It sits one level further down, under `dsl/<dsl>/`, because it varies by the
  * syntax it is typed in as well and by nothing else: see [Dsls].
  *

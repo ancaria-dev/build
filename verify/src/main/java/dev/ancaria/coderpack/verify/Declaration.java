@@ -8,13 +8,13 @@ import java.util.Map;
  * loader this toolchain can vouch for.
  *
  * <p>Everything the loader does with a jar starts here. No descriptor and the
- * jar is skipped without a word about why; no {@code id} or {@code entrypoint}
- * and it is skipped as unparseable; an {@code api} range this contract is
+ * jar is skipped without a word about why. No {@code id} or {@code entrypoint}
+ * and it is skipped as unparseable. An {@code api} range this contract is
  * outside of and it is refused by name. All three are silent at build time and
  * loud in a player log, which is the wrong way round.
  *
  * <p>{@code loader} is checked for syntax and no further. It names launcher
- * releases, and no toolchain can know which of those exist yet -- a mod that
+ * releases, and no toolchain can know which of those exist yet. A mod that
  * asks for a fix landing in the next one is writing something true about a
  * version this build has never seen.
  */
