@@ -63,6 +63,7 @@ build.gradle.kts                     der ausgefüllte sacred { }-Block
 settings.gradle.kts                  erst mavenLocal, dann das Plugin-Portal
 registry.toml                        damit der Mod aus einem Launcher installierbar ist
 .github/workflows/build.yml          baut ihn und veröffentlicht jede neue Version
+dependencies.json                    die coderpack-Version, die CI lädt
 gradlew, gradlew.bat
 gradle/wrapper/gradle-wrapper.jar
 gradle/wrapper/gradle-wrapper.properties
@@ -79,9 +80,9 @@ schreibt `build.gradle` und `settings.gradle` anstelle der beiden
 `.kts`-Dateien. Ein Java-Mod kann also mit Groovy DSL gebaut werden, ein
 Kotlin-Mod mit Kotlin DSL. Ohne `--dsl` verwendet `coderpack` Kotlin DSL.
 
-Mit `--no-registry` entfallen `registry.toml` und der Workflow für Releases.
-Standardmäßig entsteht dagegen ein vollständiges Mod-Repository, das der
-Launcher abonnieren kann.
+Mit `--no-registry` entfallen `registry.toml`, `dependencies.json` und der
+Workflow für Releases. Standardmäßig entsteht dagegen ein vollständiges
+Mod-Repository, das der Launcher abonnieren kann.
 
 `my-mod` ist die Mod-ID. Noch vor dem ersten Schreibzugriff prüft `coderpack`
 sie nach derselben Regel wie das Plugin. Aus der ID leitet das Werkzeug den
@@ -100,7 +101,7 @@ ab. Diese Werte lassen sich über Optionen ändern.
 | `--language kotlin` | worin der Mod selbst geschrieben ist: `java`, `kotlin` oder `groovy`, sonst `java` |
 | `--dsl groovy` | worin der Build des Projekts geschrieben ist: `kotlin` oder `groovy`, sonst `kotlin` |
 | `--repo https://github.com/me/my-mod` | wo das Projekt leben wird: daraus entsteht jeder Download-Link |
-| `--no-registry` | das Projekt nicht zum Mod-Repository machen: keine `registry.toml`, kein Release-Workflow |
+| `--no-registry` | das Projekt nicht zum Mod-Repository machen: keine `registry.toml`, keine `dependencies.json`, kein Release-Workflow |
 | `--git` | `git init` ausführen und `--repo` als `origin` eintragen |
 | `--force` | in ein Verzeichnis schreiben, in dem schon etwas liegt |
 

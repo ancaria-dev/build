@@ -55,6 +55,7 @@ build.gradle.kts                     the filled sacred { } block
 settings.gradle.kts                  mavenLocal first, then the plugin portal
 registry.toml                        metadata for a launcher repository
 .github/workflows/build.yml          builds and releases each new version
+dependencies.json                    the coderpack version CI downloads
 gradlew, gradlew.bat
 gradle/wrapper/gradle-wrapper.jar
 gradle/wrapper/gradle-wrapper.properties
@@ -70,8 +71,9 @@ The build script language is a separate choice. `--dsl groovy` writes
 option, the project uses Kotlin DSL. Any supported mod language can be paired
 with either build DSL.
 
-`--no-registry` omits `registry.toml` and the release workflow. By default, a
-new mod is also a repository that a launcher can subscribe to.
+`--no-registry` omits `registry.toml`, `dependencies.json`, and the release
+workflow. By default, a new mod is also a repository that a launcher can
+subscribe to.
 
 `my-mod` is the mod id. `coderpack` validates it before writing anything, then
 derives `My Mod`, `mods.mymod`, and `MyMod` for the display name, package, and
@@ -89,7 +91,7 @@ entrypoint class.
 | `--language kotlin` | The mod language: `java`, `kotlin`, or `groovy`. The default is `java` |
 | `--dsl groovy` | The build DSL: `kotlin` or `groovy`. The default is `kotlin` |
 | `--repo https://github.com/me/my-mod` | The future project URL used to build download links |
-| `--no-registry` | Omits `registry.toml` and the release workflow |
+| `--no-registry` | Omits `registry.toml`, `dependencies.json`, and the release workflow |
 | `--git` | Runs `git init` and adds `--repo` as `origin` |
 | `--force` | Writes into a non-empty directory |
 

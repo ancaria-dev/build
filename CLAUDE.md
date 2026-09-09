@@ -338,7 +338,7 @@ cd my-mod
 coderpack index
 ```
 
-`--no-registry` omits exactly `registry.toml` and
+`--no-registry` omits exactly `registry.toml`, `dependencies.json`, and
 `.github/workflows/build.yml`. It does not change the rest of the project.
 
 `coderpack new` writes `registry.toml`. It never writes

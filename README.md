@@ -58,6 +58,7 @@ build.gradle.kts                     заполненный блок sacred { }
 settings.gradle.kts                  mavenLocal, затем портал плагинов
 registry.toml                        описание репозитория модов
 .github/workflows/build.yml          сборка, проверка индекса и релиз
+dependencies.json                    версия coderpack, которую скачивает CI
 gradlew, gradlew.bat
 gradle/wrapper/gradle-wrapper.jar
 gradle/wrapper/gradle-wrapper.properties
@@ -70,7 +71,7 @@ src/main/java/mods/mymod/MyMod.java  onLoad и рабочий слушатель
 `--language groovy` выбирает Groovy. Опция `--dsl groovy` создаёт
 `build.gradle` и `settings.gradle` независимо от языка мода.
 
-`--no-registry` исключает `registry.toml` и
+`--no-registry` исключает `registry.toml`, `dependencies.json` и
 `.github/workflows/build.yml`. Остальная часть проекта не меняется.
 
 `my-mod` служит идентификатором мода. Перед записью файлов он проверяется через
