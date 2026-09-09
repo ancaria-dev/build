@@ -260,7 +260,7 @@ A Kotlin DSL build for a mod looks like this:
 
 ```kotlin
 plugins {
-    id("dev.ancaria.coderpack") version "0.99.0"
+    id("dev.ancaria.coderpack") version "0.100.0"
 }
 
 version = "1.0.0"
@@ -282,7 +282,7 @@ sacred {
     conflicts = listOf("other-mod")                   // or conflictsWith("other-mod")
     apiRange = "[1,2)"                                // API contracts this mod supports
     loaderRange = "[0.1.20,)"                         // optional loader release range
-    apiVersion = "0.99.0"                              // added as compileOnly
+    apiVersion = "0.100.0"                              // added as compileOnly
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
 }
 ```
@@ -301,7 +301,7 @@ Mod Loader release. The plugin checks its syntax but cannot prove compatibility
 with loader releases.
 
 `apiVersion` is different from `apiRange`. It is the Maven artifact version of
-`dev.ancaria.coderpack:api`, currently `0.99.0`, and the plugin adds that
+`dev.ancaria.coderpack:api`, currently `0.100.0`, and the plugin adds that
 dependency as `compileOnly`.
 
 Build or install the mod with:

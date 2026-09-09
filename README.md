@@ -251,7 +251,7 @@ rootProject.name = "my-mod"
 
 ```kotlin
 plugins {
-    id("dev.ancaria.coderpack") version "0.99.0"
+    id("dev.ancaria.coderpack") version "0.100.0"
 }
 
 version = "1.0.0"
@@ -273,7 +273,7 @@ sacred {
     conflicts = listOf("another-mod")
     apiRange = "[1,2)"
     loaderRange = "[0.1.20,)"
-    apiVersion = "0.99.0"
+    apiVersion = "0.100.0"
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
 }
 ```
@@ -291,7 +291,7 @@ sacred {
 
 `apiVersion` имеет другой смысл. Это версия артефакта
 `dev.ancaria.coderpack:api`, который добавляется как `compileOnly`. Сейчас
-скаффолдер записывает `"0.99.0"`.
+скаффолдер записывает `"0.100.0"`.
 
 Сборка и установка выполняются так:
 

@@ -290,7 +290,7 @@ Ein kompaktes `build.gradle.kts` kann mit Beispielwerten so aussehen:
 
 ```kotlin
 plugins {
-    id("dev.ancaria.coderpack") version "0.99.0"
+    id("dev.ancaria.coderpack") version "0.100.0"
 }
 
 version = "1.0.0"
@@ -310,7 +310,7 @@ sacred {
 
     // Der Loader stellt diese API bereit. Sie wird zum Kompilieren verwendet,
     // aber nicht in das JAR gepackt.
-    apiVersion = "0.99.0"                              // wird als compileOnly ergänzt
+    apiVersion = "0.100.0"                              // wird als compileOnly ergänzt
 
     // Ziel für installSacredMod. Der Spieleordner kommt als Property:
     //   gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
@@ -330,7 +330,7 @@ des Sacred Mod Loader. Beide Werte verwenden die Bereichsnotation von Maven.
 
 `apiVersion` bezeichnet etwas anderes: die Artefaktversion von
 `dev.ancaria.coderpack:api`, gegen die der Quelltext kompiliert wird. Sie ändert
-sich bei Veröffentlichungen und ist derzeit `0.99.0`. Der API-Vertrag wird nur
+sich bei Veröffentlichungen und ist derzeit `0.100.0`. Der API-Vertrag wird nur
 bei inkompatiblen Änderungen hochgezählt.
 
 Danach zwei Befehle:
