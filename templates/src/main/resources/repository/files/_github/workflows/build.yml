@@ -1,13 +1,14 @@
 # Builds this mod on every push, and cuts a release when its version changes.
 #
-# The version lives in build.gradle.kts. Raise it, run `coderpack index`, commit
-# both, push. This creates the tag <id>-v<version> and attaches the jar to it,
-# which is exactly the address registry.toml publishes, so a launcher pointed
-# at this repository offers the new version the moment the release exists. A
-# push that changes no version releases nothing.
+# The version lives in build.gradle.kts. Raise it and push: this regenerates
+# sacred.mods.repository.json from the jar it just built, commits it back, then
+# creates the tag <id>-v<version> and attaches the jar to it. That tag is
+# exactly the address registry.toml publishes, so a launcher pointed at this
+# repository offers the new version the moment the release exists. A push that
+# changes no version releases nothing.
 #
-# No secret to set up. The token GitHub hands every workflow can create a
-# release in the repository it is running in, and that is all this needs.
+# No secret to set up. The token GitHub hands every workflow can commit to the
+# repository it runs in and create a release there, and that is all this needs.
 name: build
 
 on:
@@ -26,6 +27,11 @@ jobs:
         with:
           # The release step asks the remote which tags already exist.
           fetch-depth: 0
+          # The index step below pushes the file it regenerates, so the token
+          # has to stay in the git config after the checkout. This is the
+          # default; it is written out because a run that loses it fails in the
+          # push rather than in the checkout.
+          persist-credentials: true
 
       - uses: actions/setup-java@v6
         with:
@@ -54,11 +60,41 @@ jobs:
           unzip -q .coderpack/coderpack-*.zip -d .coderpack
           echo "$PWD/$(echo .coderpack/coderpack-*/bin)" >> "$GITHUB_PATH"
 
-      # The index is generated from the built jar and committed. This says the
-      # committed one still matches. A version raised without regenerating it
-      # would otherwise offer players the old jar under the new number.
-      - name: The index agrees with the jar
-        run: coderpack index --check
+      # The index is generated from the built jar and committed, because a
+      # launcher pointed at this repository reads it straight out of the tree.
+      # Rather than ask you to remember `coderpack index` on every version
+      # bump, this regenerates it from the jar the run just built and commits
+      # the result. Raise the version, push, and the rest follows.
+      #
+      # It runs before the release step on purpose: the tag that step creates
+      # then points at the commit whose index describes the jar being released.
+      - name: Regenerate the index and commit it
+        if: github.ref_name == github.event.repository.default_branch
+        run: |
+          set -e
+          coderpack index
+          if git diff --quiet -- sacred.mods.repository.json; then
+            echo "the index already matched the jar"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sacred.mods.repository.json
+          git commit -m "Regenerate the mod index"
+          # A push made with the workflow token starts no workflow run of its
+          # own, so this cannot loop back into itself.
+          git push origin "HEAD:$GITHUB_REF_NAME"
+
+      # Nothing may be pushed from a pull request, so there the index is only
+      # generated, never compared. Comparing it would ask a contributor to
+      # reproduce this runner's jar byte for byte, and a jar carrying a language
+      # runtime does not always come out identical on another machine.
+      # Generating still fails on what a pull request can genuinely get wrong:
+      # an unreadable registry.toml, a duplicate mod id, a jar the linter
+      # refuses.
+      - name: The index can be generated from the jar
+        if: github.ref_name != github.event.repository.default_branch
+        run: coderpack index
 
       - name: Release a version that has no tag yet
         if: github.ref_name == github.event.repository.default_branch
