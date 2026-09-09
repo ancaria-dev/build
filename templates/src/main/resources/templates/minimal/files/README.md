@@ -39,7 +39,7 @@ launcher, then start the game.
 └── gradlew, gradlew.bat, gradle/wrapper/, .gitignore
 ```
 
-The loader calls `{{class}}.onLoad` once and passes it a `Context`. This minimal
+The loader loads `{{class}}` once and passes it a `Context`. This minimal
 template registers no listeners. It suits a mod that only uses
 `context.game()`, as well as one that keeps its listeners in separate classes.
 
@@ -47,3 +47,8 @@ To receive events, pass an object to `context.events().register(...)`. Each
 listener must be a public method marked with `@Subscribe` and accept exactly one
 event parameter. It must return no value. The parameter’s type determines which
 events the method receives.
+
+A Kotlin project has a second way in, from
+`dev.ancaria.coderpack:api-kotlin`, which the generated build script already
+depends on: `on<Hero> { }` registers one listener as a lambda, and
+`events { }` groups several. Both are the same bus as `@Subscribe`.

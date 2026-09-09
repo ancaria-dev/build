@@ -39,9 +39,13 @@ then start the game.
 └── gradlew, gradlew.bat, gradle/wrapper/, .gitignore
 ```
 
-`{{class}}.onLoad` runs once and receives the mod context. Register listeners
-there. A listener is a public `@Subscribe` method with one event parameter and
-no return value. The parameter type determines which events it receives.
+`{{class}}` is loaded once and handed the mod context. Register listeners
+there. In Java and Groovy a listener is a public `@Subscribe` method with one
+event parameter and no return value, and the parameter type decides which
+events it receives. The Kotlin entrypoint registers the same listener as
+`on<Hero> { }`, through `dev.ancaria.coderpack:api-kotlin`: the same bus, said
+in Kotlin. `@Subscribe` still works there, and the extensions are still
+optional.
 
-The world does not exist when `onLoad` runs. Wait for a `Hero` event or
+The world does not exist yet at that point. Wait for a `Hero` event or
 `World.Phase.LOADED` before touching player state.

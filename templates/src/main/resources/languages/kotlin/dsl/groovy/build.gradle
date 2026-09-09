@@ -15,6 +15,14 @@ dependencies {
     // scope the fat jar packs, and the other one compiles and then throws
     // NoClassDefFoundError somewhere inside the game.
     implementation "org.jetbrains.kotlin:kotlin-stdlib:{{kotlin}}"
+
+    // The API in Kotlin: `on<Hero> { }` instead of a class literal, and a `var`
+    // for every field a listener is allowed to rewrite. It forwards to the Java
+    // API and does nothing else, so it is optional; drop this line and the same
+    // mod compiles the way a Java one does. The loader does not hand it over
+    // the way it hands over the API, so it is packed like the standard library
+    // above rather than declared compileOnly.
+    implementation "dev.ancaria.coderpack:api-kotlin:{{api}}"
 }
 
 kotlin {
