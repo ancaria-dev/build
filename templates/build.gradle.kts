@@ -232,9 +232,34 @@ val apiStubJar = tasks.register<Jar>("apiStubJar") {
     from(apiStub.output)
 }
 
+// The Kotlin half of the same problem. A generated Kotlin mod also depends on
+// dev.ancaria.coderpack:api-kotlin, which coderpack publishes as well. There is
+// no source to borrow for this one, because the linter's fixtures are Java, so
+// it is written out under src/apiKotlinStub and holds exactly the declarations
+// the Kotlin templates call.
+val apiKotlinStub = sourceSets.create("apiKotlinStub")
+
+dependencies {
+    // The stub API it is written against, and the standard library it is
+    // written in. Both compileOnly: this jar carries neither, the same way the
+    // published module carries neither.
+    "apiKotlinStubCompileOnly"(apiStub.output)
+    "apiKotlinStubCompileOnly"(embeddedKotlin("stdlib"))
+}
+
+val apiKotlinStubJar = tasks.register<Jar>("apiKotlinStubJar") {
+    group = "verification"
+    description = "Packs the stub Kotlin API for a scaffolded Kotlin mod to resolve"
+    archiveFileName = "api-kotlin-$apiVersion.jar"
+    // The same directory as the jar above. The test offers one flatDir
+    // repository and both coordinates have to be findable in it.
+    destinationDirectory = layout.buildDirectory.dir("api-stub")
+    from(apiKotlinStub.output)
+}
+
 tasks.test {
     useJUnitPlatform()
-    dependsOn(apiStubJar)
+    dependsOn(apiStubJar, apiKotlinStubJar)
     // The end-to-end test resolves the plugin the way a mod author does, out of
     // the local Maven repository, so both halves of it have to be there first.
     dependsOn(":plugin:publishToMavenLocal", ":verify:publishToMavenLocal")
