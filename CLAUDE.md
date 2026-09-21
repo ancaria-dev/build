@@ -65,8 +65,8 @@ runtime-dependency invariants as the Gradle path.
 The authoritative build properties are in `gradle/gradle.properties`:
 
 - group `dev.ancaria.coderpack`
-- plugin, verifier, templates, and command-line version `0.99.0`
-- API artifact version `0.99.0`
+- plugin, verifier, templates, and command-line version `0.101.0`
+- API artifact version `0.102.0`
 - API contract `2`, declared as `Verifier.API`
 - default API range `[2,3)`, derived as `Verifier.API_RANGE`
 
@@ -150,7 +150,7 @@ because this repository cannot establish which launcher releases exist.
 
 `apiVersion` names the Maven artifact
 `dev.ancaria.coderpack:api:<apiVersion>`. The plugin adds it as `compileOnly`
-only when the property has a value. Generated projects set it to `0.99.0`. The
+only when the property has a value. Generated projects set it to `0.102.0`. The
 loader already provides the API. Packing another copy can produce
 `ClassCastException` between classes with identical names.
 
