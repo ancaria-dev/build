@@ -28,7 +28,8 @@ record Klass(String name, int access, String superName, List<String> interfaces,
              int version, List<Meth> methods, boolean parsed) {
 
     /** A constructor or a listener. Nothing else is kept. */
-    record Meth(String name, String descriptor, int access, boolean subscribes) {
+    record Meth(String name, String descriptor, int access, boolean subscribes,
+                String priority) {
 
         boolean isPublic() {
             return Modifier.isPublic(access);
@@ -90,16 +91,32 @@ record Klass(String name, int access, String superName, List<String> interfaces,
 
                 private boolean subscribes;
 
+                // Null unless the annotation spelled one out, which is the same
+                // thing as NORMAL. Only MONITOR is a rule here, and a mod that
+                // leaves the default has not asked to be one.
+                private String priority;
+
                 @Override
                 public AnnotationVisitor visitAnnotation(String type, boolean visible) {
-                    subscribes |= SUBSCRIBE.equals(type);
-                    return null;
+                    if (!SUBSCRIBE.equals(type)) {
+                        return null;
+                    }
+                    subscribes = true;
+                    return new AnnotationVisitor(Opcodes.ASM9) {
+                        @Override
+                        public void visitEnum(String named, String of, String value) {
+                            if ("priority".equals(named)) {
+                                priority = value;
+                            }
+                        }
+                    };
                 }
 
                 @Override
                 public void visitEnd() {
                     if (subscribes || "<init>".equals(name)) {
-                        methods.add(new Meth(name, descriptor, access, subscribes));
+                        methods.add(new Meth(name, descriptor, access, subscribes,
+                                             priority));
                     }
                 }
             };

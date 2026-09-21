@@ -44,7 +44,7 @@ class VerifierTest {
         Finding found = only(verify("""
                 id = "demo-mod"
                 version = "1.0.0"
-                api = "1"
+                api = "2"
                 """, DEMO));
         assertTrue(found.detail().contains("No entrypoint"), found.detail());
     }
@@ -62,17 +62,17 @@ class VerifierTest {
 
     @Test
     void finds_a_mod_built_against_another_api() {
-        Finding found = only(verify(Jars.DECLARATION.replace("api = \"1\"", "api = \"2\""),
+        Finding found = only(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"1\""),
                                     DEMO));
-        assertTrue(found.detail().contains("api = “2”"), found.detail());
+        assertTrue(found.detail().contains("api = “1”"), found.detail());
         assertTrue(found.detail().contains("API " + Verifier.API), found.detail());
     }
 
     /** A range covering this contract passes, however wide it is written. */
     @Test
     void accepts_a_range_that_covers_this_contract() {
-        for (String range : new String[] {Verifier.API_RANGE, "[1,3)", "[1,)", "[1]", "1"}) {
-            assertTrue(verify(Jars.DECLARATION.replace("api = \"1\"", "api = \"" + range + "\""),
+        for (String range : new String[] {Verifier.API_RANGE, "[1,3)", "[1,)", "[2]", "2"}) {
+            assertTrue(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"" + range + "\""),
                               DEMO).ok(), range);
         }
     }
@@ -80,15 +80,15 @@ class VerifierTest {
     /** And one that does not is refused, with the range in the message. */
     @Test
     void refuses_a_range_this_toolchain_is_outside_of() {
-        Finding found = only(verify(Jars.DECLARATION.replace("api = \"1\"", "api = \"[2,3)\""),
+        Finding found = only(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"[3,4)\""),
                                     DEMO));
         assertEquals(Level.ERROR, found.level());
-        assertTrue(found.detail().contains("[2,3)"), found.detail());
+        assertTrue(found.detail().contains("[3,4)"), found.detail());
     }
 
     @Test
     void finds_an_api_range_nothing_can_read() {
-        Finding found = only(verify(Jars.DECLARATION.replace("api = \"1\"", "api = \"[1,2\""),
+        Finding found = only(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"[1,2\""),
                                     DEMO));
         assertEquals(Level.ERROR, found.level());
         assertTrue(found.detail().contains("version range is invalid"), found.detail());
@@ -173,6 +173,31 @@ class VerifierTest {
     void finds_a_listener_that_returns_something() {
         Finding found = only(verify(Jars.DECLARATION, DEMO, "demo/Returns.class"));
         assertTrue(found.detail().contains("returns java.lang.String"), found.detail());
+    }
+
+    @Test
+    void accepts_a_listener_that_returns_its_own_event_mutation() {
+        assertTrue(verify(Jars.DECLARATION, DEMO, "demo/Decider.class").ok());
+    }
+
+    /**
+     * Another event's mutation compiles, and the loader would fold it into the
+     * wrong number. The return type is the permission, so it has to be the one
+     * that event issued.
+     */
+    @Test
+    void finds_a_listener_returning_another_events_mutation() {
+        Finding found = only(verify(Jars.DECLARATION, DEMO, "demo/Crossed.class"));
+        assertTrue(found.detail().contains("Gold.Mutation"), found.detail());
+        assertTrue(found.detail().contains("Hero.Mutation"), found.detail());
+    }
+
+    /** A monitor watches. Whatever it decides is thrown away at run time. */
+    @Test
+    void finds_a_monitor_that_tries_to_decide() {
+        Finding found = only(verify(Jars.DECLARATION, DEMO, "demo/Watcher.class"));
+        assertEquals(Level.ERROR, found.level());
+        assertTrue(found.detail().contains("MONITOR"), found.detail());
     }
 
     @Test

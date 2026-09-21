@@ -9,4 +9,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Subscribe {
+
+    /** Read by the linter: a MONITOR method may not decide. */
+    Priority priority() default Priority.NORMAL;
 }

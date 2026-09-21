@@ -32,7 +32,7 @@ public final class Verifier {
      * {@code Api.VERSION} in coderpack and one in {@code mods.API} in the
      * launcher.
      */
-    public static final String API = "1";
+    public static final String API = "2";
 
     /**
      * The range {@code Descriptor} writes when a mod author says nothing: this
