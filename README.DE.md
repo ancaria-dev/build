@@ -325,7 +325,7 @@ Nur `id` und `entrypoint` sind Pflicht. Fehlen optionale Angaben, erzeugt das
 Plugin trotzdem einen gültigen Deskriptor. Eine ungültige `id` stoppt den Build,
 bevor ein JAR entsteht, das der Launcher später nicht auflisten könnte.
 
-Ohne eigene Angabe schreibt das Plugin `api = "[1,2)"` in den Deskriptor. Das
+Ohne eigene Angabe schreibt das Plugin `api = "[2,3)"` in den Deskriptor. Das
 ist der Bereich der API-Verträge, für die der Mod gebaut wurde. `apiRange` darf
 enger oder weiter gefasst werden, muss aber den Vertrag dieser Toolchain
 enthalten. `loaderRange` ist optional und begrenzt die unterstützten Versionen

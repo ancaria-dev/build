@@ -274,7 +274,7 @@ sacred {
     website = "https://ancaria.dev"
     repository = "https://github.com/ancaria-dev/mods"
     conflicts = listOf("another-mod")
-    apiRange = "[1,2)"
+    apiRange = "[2,3)"
     loaderRange = "[0.1.20,)"
     apiVersion = "0.100.0"
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
@@ -286,7 +286,7 @@ sacred {
 пополнять методами `author(name)` и `conflictsWith(id)`.
 
 `apiRange` описывает совместимые контракты API в синтаксисе диапазонов Maven.
-Значение по умолчанию сейчас равно `"[1,2)"`. Плагин не разрешает диапазон, в
+Значение по умолчанию сейчас равно `"[2,3)"`. Плагин не разрешает диапазон, в
 который не входит контракт `Verifier.API`, сейчас это `"1"`.
 
 `loaderRange` задаёт совместимые версии Sacred Mod Loader. Оно необязательно.

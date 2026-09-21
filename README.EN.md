@@ -286,7 +286,7 @@ sacred {
     website = "https://ancaria.dev"
     repository = "https://github.com/ancaria-dev/mods"
     conflicts = listOf("other-mod")                   // or conflictsWith("other-mod")
-    apiRange = "[1,2)"                                // API contracts this mod supports
+    apiRange = "[2,3)"                                // API contracts this mod supports
     loaderRange = "[0.1.20,)"                         // optional loader release range
     apiVersion = "0.100.0"                              // added as compileOnly
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
@@ -297,7 +297,7 @@ Only `id` and `entrypoint` are required. `displayName` defaults to `id`, and
 the descriptor version defaults to the project version. Other optional values
 are omitted when blank or unset.
 
-The generated descriptor uses Maven range notation. `api = "[1,2)"` means the
+The generated descriptor uses Maven range notation. `api = "[2,3)"` means the
 mod supports API contract 1 and stops before contract 2. The default is the
 current contract and no other. Authors may widen or narrow the range, but it
 must still contain the contract used by this toolchain.

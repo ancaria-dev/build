@@ -67,8 +67,8 @@ The authoritative build properties are in `gradle/gradle.properties`:
 - group `dev.ancaria.coderpack`
 - plugin, verifier, templates, and command-line version `0.99.0`
 - API artifact version `0.99.0`
-- API contract `1`, declared as `Verifier.API`
-- default API range `[1,2)`, derived as `Verifier.API_RANGE`
+- API contract `2`, declared as `Verifier.API`
+- default API range `[2,3)`, derived as `Verifier.API_RANGE`
 
 The wrapper uses Gradle `9.7.1` and verifies SHA-256
 `acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a`.
@@ -123,7 +123,7 @@ The `sacred` extension has these properties:
 - `website`
 - `repository`
 - `conflicts`, with `conflictsWith(id)`
-- `apiRange`, defaulting to `[1,2)`
+- `apiRange`, defaulting to `[2,3)`
 - `loaderRange`
 - `apiVersion`
 - `installTo`
@@ -136,12 +136,12 @@ API range that excludes `Verifier.API`, and an unreadable loader range.
 `apiRange`, `loaderRange`, and `apiVersion` are different values:
 
 ```toml
-api = "[1,2)"
+api = "[2,3)"
 loader = "[0.1.20,)"
 ```
 
 `api` names compatible API contracts. Authors may widen or narrow it, but the
-range must contain contract `1`, which is the contract this toolchain builds.
+range must contain contract `2`, which is the contract this toolchain builds.
 Both `Descriptor.generate` and the packed-jar verifier enforce that rule.
 
 `loader` names compatible Sacred Mod Loader releases. It is omitted when
@@ -425,15 +425,24 @@ packaging, command-line exit status, or index generation.
 
 | Check | Errors | Warnings |
 |---|---|---|
-| `Declaration` | Unreadable jar, missing `META-INF/declaration.toml`, missing `id`, `entrypoint`, or `api`, unreadable ranges, API range excluding contract `1` | Invalid id, missing version, invalid conflict id, self-conflict |
+| `Declaration` | Unreadable jar, missing `META-INF/declaration.toml`, missing `id`, `entrypoint`, or `api`, unreadable ranges, API range excluding contract `2` | Invalid id, missing version, invalid conflict id, self-conflict |
 | `Contents` | Loader API classes inside the jar, top-level signature files under `META-INF` | Zygote classes, class files above version 65 |
 | `Entrypoint` | Missing, non-public, abstract, incompatible entrypoint, or missing public no-argument constructor | Unreadable class version, external superclass that prevents proof of `SacredMod` implementation |
-| `Listeners` | `@Subscribe` with a parameter count other than one, a non-event parameter, or a non-void return | Non-public listener |
+| `Listeners` | `@Subscribe` with a parameter count other than one, a non-event parameter, a return that is not that event's own `Mutation`, or a `MONITOR` method that returns one | Non-public listener |
 
 The exact id pattern is `[a-z0-9]([a-z0-9-]*[a-z0-9])?`.
 
-An event type is an object in `dev/ancaria/coderpack/api/event/` other than
-`Guard`, or a class inside the jar whose superclass chain reaches that package.
+An event type is an object in `dev/ancaria/coderpack/api/event/` that is not
+`EventMutation`, `Decides` or `Fold` and is not a nested type, or a class inside
+the jar whose superclass chain reaches that package. A nested type there is a
+`Mutation` or the shape the numeric ones share, never an event.
+
+A listener's return type is its permission, so the linter reads it together
+with the parameter. `void` observes. Anything else has to be exactly
+`<that event>$Mutation`: another event's mutation compiles, and the loader would
+fold a gold answer into a damage decision. `Klass` therefore keeps the
+`@Subscribe` priority, because a `MONITOR` method decides nothing and saying so
+at build time is better than a log line during a player's startup.
 
 Never load mod classes in the verifier. `Klass.read` uses ASM
 `ClassReader.SKIP_CODE` and keeps only the metadata needed by the checks.
@@ -513,7 +522,7 @@ reference in a task action.
 ### Plugin tests
 
 `SacredPluginTest` currently has seven TestKit cases. They cover fat-jar
-packaging, the generated `[1,2)` API range, verification before copy, id
+packaging, the generated `[2,3)` API range, verification before copy, id
 validation, custom API and loader ranges, omitted loader ranges, API ranges
 that exclude the current contract, and invalid range syntax.
 
@@ -553,7 +562,7 @@ and exact generated file sets.
 
 ### Verifier tests
 
-`VerifierTest` currently has 22 cases. `RangesTest` has 6. They build real jars
+`VerifierTest` currently has 25 cases. `RangesTest` has 6. They build real jars
 from `verify/src/fixtures/java`, isolate one rule where applicable, and assert
 the exact findings count. Do not replace them with mocked jars.
 
