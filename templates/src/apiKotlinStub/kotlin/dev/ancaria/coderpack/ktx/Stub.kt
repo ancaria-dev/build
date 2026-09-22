@@ -43,9 +43,9 @@ public abstract class SacredMod : ApiMod {
 /** The event type as a type argument rather than a class literal. */
 public inline fun <reified E : Event> Events.on(
     priority: Priority = Priority.NORMAL,
-    ignoreCancelled: Boolean = false,
+    ignoreVetoed: Boolean = false,
     crossinline listener: (E) -> Unit,
-): Handle = on(E::class.java, priority, ignoreCancelled, Consumer { listener(it) })
+): Handle = on(E::class.java, priority, ignoreVetoed, Consumer { listener(it) })
 
 /** The registration block, with [Events] as the receiver inside. */
 public inline fun Context.events(block: Events.() -> Unit) {
