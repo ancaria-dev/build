@@ -71,8 +71,9 @@ A Kotlin project gets one dependency the other two do not:
 entrypoint extends the `SacredMod` class from that module, which keeps the
 context and hands it to `Context.load()` as a receiver, and registers its
 listener as `on<Hero> { }` rather than as an annotated method. It adds no
-capability: every declaration in it forwards to the Java API, and a field the
-API lets a listener rewrite is a `var`, so a rewrite reads `it.delta *= 2`.
+capability: every declaration in it forwards to the Java API. Events stay
+read-only, and a listener on a decidable event answers with
+`mutate { Gold.Mutation.change(it.value * 2) }` inside `on<Gold> { }`.
 Deleting the dependency and writing `@Subscribe` instead is a supported way to
 have a Kotlin mod. The module is `implementation`, not `compileOnly`, because
 the loader hands a mod the API and not this.
@@ -125,9 +126,8 @@ coderpack index
 ```
 
 Commit the generated `sacred.mods.repository.json`, then push. The included
-GitHub Actions workflow builds the mod, checks that the committed index still
-matches the jar, and creates a release tagged `<id>-v<version>` when that tag
-does not exist. A push without a new version creates no release. The workflow
+GitHub Actions workflow builds the mod, regenerates and commits the index, and
+creates a release tagged `<id>-v<version>` when that tag does not exist. A push without a new version creates no release. The workflow
 uses GitHub's repository token, so it needs no extra secret.
 
 `coderpack index` reads `registry.toml` and the descriptor inside each built
@@ -199,7 +199,7 @@ Build DSLs live under `templates/src/main/resources/dsl/<name>/`. Each has a
 This split keeps each varying file in one place. Entrypoints vary by template
 and language. Build scripts vary by language and DSL. Settings files vary only
 by DSL. The README, `.gitignore`, and repository files are shared. The current
-layout produces 12 project combinations from 26 template files instead of
+layout produces 12 project combinations from 27 template files instead of
 maintaining a separate directory for every combination.
 
 The scaffolder substitutes `{{id}}`, `{{name}}`, `{{description}}`,
@@ -258,9 +258,9 @@ rootProject.name = "my-mod"
 ```
 
 `mavenLocal()` comes first because local development publishes both the plugin
-and API there. No public release exists yet, so build this repository and
-`coderpack`, then run `./gradlew publishToMavenLocal` in both checkouts. The
-plugin portal and Maven Central are already declared for future releases.
+and API there. To try unreleased work, build this repository and `coderpack`,
+then run `./gradlew publishToMavenLocal` in both checkouts. Released versions
+come from the plugin portal and Maven Central.
 
 A Kotlin DSL build for a mod looks like this:
 
@@ -288,7 +288,7 @@ sacred {
     conflicts = listOf("other-mod")                   // or conflictsWith("other-mod")
     apiRange = "[2,3)"                                // API contracts this mod supports
     loaderRange = "[0.1.20,)"                         // optional loader release range
-    apiVersion = "0.100.0"                              // added as compileOnly
+    apiVersion = "0.102.0"                            // added as compileOnly
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
 }
 ```
@@ -298,7 +298,7 @@ the descriptor version defaults to the project version. Other optional values
 are omitted when blank or unset.
 
 The generated descriptor uses Maven range notation. `api = "[2,3)"` means the
-mod supports API contract 1 and stops before contract 2. The default is the
+mod supports API contract 2 and stops before contract 3. The default is the
 current contract and no other. Authors may widen or narrow the range, but it
 must still contain the contract used by this toolchain.
 
@@ -307,7 +307,7 @@ Mod Loader release. The plugin checks its syntax but cannot prove compatibility
 with loader releases.
 
 `apiVersion` is different from `apiRange`. It is the Maven artifact version of
-`dev.ancaria.coderpack:api`, currently `0.100.0`, and the plugin adds that
+`dev.ancaria.coderpack:api`, currently `0.102.0`, and the plugin adds that
 dependency as `compileOnly`.
 
 Build or install the mod with:
@@ -358,8 +358,9 @@ The linter reports errors for:
 - a missing, non-public, abstract, or incompatible entrypoint
 - an entrypoint without a public no-argument constructor
 - loader API classes packed into the mod jar
-- a `@Subscribe` method with the wrong parameter count or type, or a return
-  value
+- a `@Subscribe` method with the wrong parameter count or type, a return type
+  other than `void` or that event's own `Mutation`, or a `MONITOR` method that
+  returns a mutation
 - signature files copied from a signed dependency
 
 Warnings do not fail the build. They cover invalid ids, missing versions,

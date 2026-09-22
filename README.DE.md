@@ -81,8 +81,9 @@ Einstiegspunkt erbt von der Klasse `SacredMod` aus diesem Modul, die den
 Context festhält und ihn `Context.load()` als Receiver übergibt, und meldet
 seinen Listener als `on<Hero> { }` statt als annotierte Methode an. Das Modul
 kann nichts, was die Java-API nicht kann: jede Deklaration ruft eine Methode
-dort auf, und ein Feld, das die API überschreiben lässt, ist ein `var`, sodass
-eine Änderung `it.delta *= 2` lautet. Die Abhängigkeit zu streichen und
+dort auf. Events bleiben schreibgeschützt, und ein Listener auf einem
+entscheidbaren Event antwortet mit `mutate { Gold.Mutation.change(it.value * 2) }`
+innerhalb von `on<Gold> { }`. Die Abhängigkeit zu streichen und
 stattdessen `@Subscribe` zu schreiben, ist ein unterstützter Weg zu einem
 Kotlin-Mod. Eingebunden wird es als `implementation`, nicht als `compileOnly`,
 weil der Loader einem Mod die API reicht und dieses Modul nicht.
@@ -139,9 +140,9 @@ gradlew assembleSacredMod
 coderpack index
 ```
 
-Bei einem Push auf `main` oder `master` sowie bei einem Pull Request baut der
-mitgelieferte Workflow den Mod, erzeugt den Index aus dem soeben gebauten JAR
-neu und committet ihn. Verglichen wird nichts: ein JAR, das eine Sprachlaufzeit
+Bei einem Push auf `main` oder `master` baut der mitgelieferte Workflow den
+Mod, erzeugt den Index aus dem soeben gebauten JAR neu und committet ihn. Bei
+einem Pull Request erzeugt er den Index nur, ohne ihn zu committen. Verglichen wird nichts: ein JAR, das eine Sprachlaufzeit
 mitbringt, fällt von Rechner zu Rechner nicht Byte für Byte gleich aus, und ein
 Vergleich würde an korrekter Arbeit scheitern. Nur auf dem Default-Branch
 veröffentlicht er ein Release mit dem Tag
@@ -219,7 +220,7 @@ Einstiegspunkte unterscheiden sich nach Template und Sprache. Build-Skripte
 hängen von Sprache und DSL ab, Settings-Dateien nur von der DSL. README,
 `.gitignore` und SRML-Dateien sind in allen zwölf Kombinationen gleich und
 werden deshalb einmal gepflegt. So entstehen zwölf funktionsfähige Projekte aus
-26 Dateien statt aus 72 nahezu gleichen Kopien.
+27 Dateien statt aus 72 nahezu gleichen Kopien.
 
 Die Platzhalter `{{id}}`, `{{package}}`, `{{packagePath}}`, `{{class}}`,
 `{{entrypoint}}`, `{{name}}`, `{{description}}`, `{{author}}`, `{{repo}}`,
@@ -313,7 +314,7 @@ sacred {
 
     // Der Loader stellt diese API bereit. Sie wird zum Kompilieren verwendet,
     // aber nicht in das JAR gepackt.
-    apiVersion = "0.100.0"                              // wird als compileOnly ergänzt
+    apiVersion = "0.102.0"                            // wird als compileOnly ergänzt
 
     // Ziel für installSacredMod. Der Spieleordner kommt als Property:
     //   gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
@@ -333,7 +334,7 @@ des Sacred Mod Loader. Beide Werte verwenden die Bereichsnotation von Maven.
 
 `apiVersion` bezeichnet etwas anderes: die Artefaktversion von
 `dev.ancaria.coderpack:api`, gegen die der Quelltext kompiliert wird. Sie ändert
-sich bei Veröffentlichungen und ist derzeit `0.100.0`. Der API-Vertrag wird nur
+sich bei Veröffentlichungen und ist derzeit `0.102.0`. Der API-Vertrag wird nur
 bei inkompatiblen Änderungen hochgezählt.
 
 Danach zwei Befehle:
@@ -376,14 +377,15 @@ Prüfung wird das gepackte JAR kopiert. Der Linter liest Deskriptor und Bytecode
 auf dieselbe Weise wie der Loader und meldet unter anderem folgende Fehler:
 
 - kein `META-INF/declaration.toml`, oder eines ohne `id`, `entrypoint` oder `api`
-- ein ungültiger `api`-Bereich oder ein Bereich, der API-Vertrag 1 nicht enthält
+- ein ungültiger `api`-Bereich oder ein Bereich, der API-Vertrag 2 nicht enthält
 - ein ungültiger `loader`-Bereich
 - ein `entrypoint`, der nicht im JAR liegt, nicht `public` ist, abstrakt ist,
   keinen öffentlichen Konstruktor ohne Argumente hat oder `SacredMod` nicht
   implementiert
 - die mitgepackte Loader-API
 - eine `@Subscribe`-Methode, die nicht genau ein Event nimmt oder etwas
-  zurückgibt
+  anderes als `void` oder die `Mutation` ihres Events zurückgibt, und eine
+  `MONITOR`-Methode, die eine Mutation zurückgibt
 - Signaturdateien aus einer signierten Abhängigkeit, wegen denen der Klassenlader
   jede Klasse daneben ablehnt
 
@@ -498,7 +500,7 @@ Local auflöst, veröffentlicht `./gradlew build` die Projekte `:plugin` und
 `:verify` dort.
 
 Die Tests des Linters starten kein Gradle und laufen entsprechend schnell.
-22 Fälle bauen jeweils ein echtes JAR aus kompilierten Fixture-Klassen. Jeder
+25 Fälle bauen jeweils ein echtes JAR aus kompilierten Fixture-Klassen. Jeder
 Fall prüft eine konkrete Regel und stellt sicher, dass keine zusätzlichen Funde
 auftauchen.
 
@@ -518,9 +520,11 @@ Für Mods auf demselben Rechner genügt dieser Befehl, weil erzeugte
 Settings-Dateien `mavenLocal()` bereits enthalten. CI übernimmt die eigentliche
 Veröffentlichung. Bei einem Push auf `master` liest sie `version` aus
 `gradle/gradle.properties`. Fehlt der Tag `v<version>`, veröffentlicht sie die
-Artefakte und legt anschließend den Tag an. Die Zugangsdaten kommen aus den
-Gradle-Properties `gpr.user` und `gpr.key` oder aus `GITHUB_ACTOR` und
-`GITHUB_TOKEN`.
+Artefakte und legt anschließend den Tag an: Linter und Scaffolder als ein
+signiertes Paket in Maven Central, das Plugin im Gradle Plugin Portal. Central
+braucht `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`, `SIGNING_KEY` und
+`SIGNING_PASSWORD`, das Portal `GRADLE_PUBLISH_KEY` und `GRADLE_PUBLISH_SECRET`.
+Ein Upload nach Central wartet im Portal, bis jemand Publish drückt.
 
 Unter derselben Version werden die Implementierungsartefakte
 `dev.ancaria.coderpack:plugin`, `dev.ancaria.coderpack:verify` und
