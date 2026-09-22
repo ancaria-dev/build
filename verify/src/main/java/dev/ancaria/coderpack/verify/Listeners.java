@@ -25,7 +25,8 @@ final class Listeners implements Check {
 
     /** What lives in the event package without being an event. */
     private static final Set<String> NOT_EVENTS = Set.of(
-            EVENTS + "EventMutation", EVENTS + "Decides", EVENTS + "Fold");
+            EVENTS + "EventMutation", EVENTS + "Decides", EVENTS + "Fold",
+            EVENTS + "Delivery");
 
     private static final String MONITOR = "MONITOR";
 

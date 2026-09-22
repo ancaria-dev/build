@@ -433,9 +433,10 @@ packaging, command-line exit status, or index generation.
 The exact id pattern is `[a-z0-9]([a-z0-9-]*[a-z0-9])?`.
 
 An event type is an object in `dev/ancaria/coderpack/api/event/` that is not
-`EventMutation`, `Decides` or `Fold` and is not a nested type, or a class inside
-the jar whose superclass chain reaches that package. A nested type there is a
-`Mutation` or the shape the numeric ones share, never an event.
+`EventMutation`, `Decides`, `Fold` or `Delivery` and is not a nested type, or a
+class inside the jar whose superclass chain reaches that package. A nested type
+there is a `Mutation` or the shape the numeric ones share, never an event.
+`Delivery` only holds annotations.
 
 A listener's return type is its permission, so the linter reads it together
 with the parameter. `void` observes. Anything else has to be exactly
