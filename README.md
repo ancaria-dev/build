@@ -261,7 +261,7 @@ plugins {
 version = "1.0.0"
 
 dependencies {
-    // Зависимости времени выполнения попадут внутрь jar.
+    // Рантайм-зависимости попадут внутрь jar.
     implementation("org.jetbrains:annotations:26.0.2")
 }
 
@@ -305,7 +305,7 @@ gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Go
 ```
 
 Первая команда создаёт
-`build/sacred-mod/my-mod-1.0.0.jar` с зависимостями времени выполнения. Вторая
+`build/sacred-mod/my-mod-1.0.0.jar` с рантайм-зависимостями. Вторая
 копирует его в каталог `installTo`. Путь можно задать непосредственно:
 `installTo = file("D:/SteamLibrary/steamapps/common/Sacred Gold/mods")`.
 
@@ -322,7 +322,7 @@ gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Go
 получает `sourceCompatibility`, `targetCompatibility` и `options.release`,
 равные 21.
 
-Стандартная библиотека Kotlin и среда выполнения Groovy объявлены через
+Стандартная библиотека Kotlin и рантайм Groovy объявлены через
 `implementation`, чтобы Shadow поместил их в jar. Измерения для шаблона `mod`
 дают примерно 1,8 КБ для Java, 1,8 МБ для Kotlin и 7,8 МБ для Groovy.
 
@@ -378,7 +378,7 @@ coderpack verify build/sacred-mod/my-mod-1.0.0.jar
 Дескриптор генерируется из блока `sacred`, чтобы версия и точка входа
 соответствовали собранному jar.
 
-Shadow упаковывает зависимости времени выполнения. Каждый мод загружается
+Shadow упаковывает рантайм-зависимости. Каждый мод загружается
 собственным загрузчиком классов, поэтому нужная библиотека должна находиться
 внутри jar.
 
