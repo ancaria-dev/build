@@ -41,11 +41,17 @@ then start the game.
 
 `{{class}}` is loaded once and handed the mod context. Register listeners
 there. In Java and Groovy a listener is a public `@Subscribe` method with one
-event parameter and no return value, and the parameter type decides which
-events it receives. The Kotlin entrypoint registers the same listener as
-`on<Hero> { }`, through `dev.ancaria.coderpack:api-kotlin`: the same bus, said
-in Kotlin. `@Subscribe` still works there, and the extensions are still
-optional.
+event parameter, and the parameter type decides which events it receives. It
+returns `void` to observe. On an event that can be decided, such as `Gold` or
+`Damage`, it can instead return that event's own `Mutation`, for example
+`Gold.Mutation.change(...)`. Events are read-only, so the returned mutation is
+the only way to change the outcome. A `MONITOR` listener must return `void`.
+
+The Kotlin entrypoint registers the same listener as `on<Hero> { }`, through
+`dev.ancaria.coderpack:api-kotlin`: the same bus, said in Kotlin. There a
+listener decides with `mutate { Gold.Mutation.change(...) }` inside the
+`on<Gold> { }` body. `@Subscribe` still works there, and the extensions are
+still optional.
 
 The world does not exist yet at that point. Wait for a `Hero` event or
 `World.Phase.LOADED` before touching player state.

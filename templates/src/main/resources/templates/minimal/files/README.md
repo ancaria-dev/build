@@ -45,10 +45,15 @@ template registers no listeners. It suits a mod that only uses
 
 To receive events, pass an object to `context.events().register(...)`. Each
 listener must be a public method marked with `@Subscribe` and accept exactly one
-event parameter. It must return no value. The parameter’s type determines which
-events the method receives.
+event parameter. The parameter’s type determines which events the method
+receives. The method returns `void` to observe. On an event that can be
+decided, such as `Gold` or `Damage`, it can instead return that event’s own
+`Mutation`, for example `Gold.Mutation.change(...)`. Events are read-only, so
+this is the only way to change the outcome. A `MONITOR` listener must return
+`void`.
 
 A Kotlin project has a second way in, from
 `dev.ancaria.coderpack:api-kotlin`, which the generated build script already
 depends on: `on<Hero> { }` registers one listener as a lambda, and
-`events { }` groups several. Both are the same bus as `@Subscribe`.
+`events { }` groups several. Both are the same bus as `@Subscribe`. Inside
+`on<Gold> { }`, `mutate { Gold.Mutation.change(...) }` decides the event.
