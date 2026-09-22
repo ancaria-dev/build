@@ -65,7 +65,7 @@ runtime-dependency invariants as the Gradle path.
 The authoritative build properties are in `gradle/gradle.properties`:
 
 - group `dev.ancaria.coderpack`
-- plugin, verifier, templates, and command-line version `0.101.0`
+- plugin, verifier, templates, and command-line version `0.101.1`
 - API artifact version `0.102.0`
 - API contract `2`, declared as `Verifier.API`
 - default API range `[2,3)`, derived as `Verifier.API_RANGE`
