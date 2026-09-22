@@ -120,6 +120,56 @@ class SacredPluginTest {
         }
     }
 
+    // The usual layout, and the one the test above does not have: a mod named
+    // after its project. The thin jar and the fat one then want the same file,
+    // and `build` runs both.
+    @Test
+    fun `builds a mod whose id is its project name`() {
+        write("settings.gradle.kts", """rootProject.name = "demo-mod"""")
+        write("build.gradle.kts", """
+            plugins { id("dev.ancaria.coderpack") }
+
+            version = "1.2.3"
+
+            val loaderApi = sourceSets.create("loaderApi")
+
+            dependencies {
+                compileOnly(loaderApi.output)
+            }
+
+            sacred {
+                id = "demo-mod"
+                entrypoint = "demo.DemoMod"
+            }
+        """)
+        stubApi()
+        write("src/main/java/demo/DemoMod.java", """
+            package demo;
+
+            import dev.ancaria.coderpack.api.Context;
+            import dev.ancaria.coderpack.api.SacredMod;
+
+            public final class DemoMod implements SacredMod {
+                @Override
+                public void onLoad(Context context) {
+                }
+            }
+        """)
+
+        val result = GradleRunner.create()
+            .withProjectDir(projectDir)
+            .withPluginClasspath()
+            .withArguments("build", "assembleSacredMod", "--configuration-cache")
+            .build()
+
+        assertEquals(TaskOutcome.SUCCESS, result.task(":verifySacredMod")?.outcome)
+        assertTrue(File(projectDir, "build/sacred-mod/demo-mod-1.2.3.jar").isFile)
+        assertTrue(
+            File(projectDir, "build/libs/demo-mod-1.2.3-plain.jar").isFile,
+            "the thin jar did not step aside"
+        )
+    }
+
     @Test
     fun `refuses to pack a mod the loader would skip`() {
         write("settings.gradle.kts", """rootProject.name = "demo"""")

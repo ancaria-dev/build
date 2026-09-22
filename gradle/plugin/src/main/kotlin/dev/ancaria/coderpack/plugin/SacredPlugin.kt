@@ -116,6 +116,15 @@ class SacredPlugin : Plugin<Project> {
             exclude("module-info.class", "META-INF/versions/*/module-info.class")
         }
 
+        // Gradle's own thin jar still runs on every `build` and `assemble`. With
+        // the mod id equal to the project name, as it usually is, it would be
+        // named exactly like the fat jar above and land on the same file, and
+        // Gradle refuses two tasks that share an output. Nothing ships it, so it
+        // steps aside rather than the jar that goes into the mods folder.
+        target.tasks.named<Jar>(JavaPlugin.JAR_TASK_NAME) {
+            archiveClassifier.set("plain")
+        }
+
         // Hung off the packaging path rather than off `check` alone: a mod
         // author runs installSacredMod far more often than build, and a jar that
         // fails the lint must never reach the mods folder. The check follows the
