@@ -108,6 +108,10 @@ The plugin configures `shadowJar` as follows:
 - exclude `module-info.class` and
   `META-INF/versions/*/module-info.class`
 
+It also gives Gradle's thin `jar` the classifier `plain`. The mod id usually
+equals the project name, and without it both tasks write
+`build/libs/<id>-<version>.jar`, which Gradle rejects on `build`.
+
 `INCLUDE` is required before Shadow transformers can merge service
 registrations and repeated `.kotlin_module` entries. Do not replace it with the
 default duplicate handling.
@@ -522,10 +526,11 @@ reference in a task action.
 
 ### Plugin tests
 
-`SacredPluginTest` currently has seven TestKit cases. They cover fat-jar
-packaging, the generated `[2,3)` API range, verification before copy, id
-validation, custom API and loader ranges, omitted loader ranges, API ranges
-that exclude the current contract, and invalid range syntax.
+`SacredPluginTest` currently has eight TestKit cases. They cover fat-jar
+packaging, `build` for a mod whose id is its project name, the generated
+`[2,3)` API range, verification before copy, id validation, custom API and
+loader ranges, omitted loader ranges, API ranges that exclude the current
+contract, and invalid range syntax.
 
 The packaging case builds
 `build/sacred-mod/demo-mod-1.2.3.jar`. It asserts the descriptor, the mod class,

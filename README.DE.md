@@ -478,7 +478,7 @@ Gruppe und Version des Plugins stehen in `gradle/gradle.properties` und nicht in
 `plugin/build.gradle.kts`, denn aus dieser Datei liest die CI die Nummer, um zu
 entscheiden, ob dieser Build veröffentlicht wird.
 
-Die sieben Plugin-Tests verwenden Gradle TestKit und starten echte Builds.
+Die acht Plugin-Tests verwenden Gradle TestKit und starten echte Builds.
 Sie prüfen das Fat JAR, den erzeugten Deskriptor, Fehler bei Einstiegspunkt und
 ID, API- und Loader-Bereiche sowie die Configuration Cache. Im gepackten JAR
 müssen die Mod-Klasse und `org/jetbrains/annotations/NotNull.class` liegen,
