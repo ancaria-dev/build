@@ -61,8 +61,8 @@ abstract class SacredExtension {
     abstract val conflicts: ListProperty<String>
 
     /**
-     * Which API contracts this mod runs on, as a range: `[1,2)` is this major
-     * and no other, `[1,3)` is this one and the next, `[1,)` is this one and
+     * Which API contracts this mod runs on, as a range: `[2,3)` is this major
+     * and no other, `[2,4)` is this one and the next, `[2,)` is this one and
      * everything after it.
      *
      * Left alone it is `[<current>,<current+1>)`, which is what a mod meant back
