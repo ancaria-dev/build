@@ -65,10 +65,10 @@ runtime-dependency invariants as the Gradle path.
 The authoritative build properties are in `gradle/gradle.properties`:
 
 - group `dev.ancaria.coderpack`
-- plugin, verifier, templates, and command-line version `0.101.1`
-- API artifact version `0.102.0`
-- API contract `2`, declared as `Verifier.API`
-- default API range `[2,3)`, derived as `Verifier.API_RANGE`
+- plugin, verifier, templates, and command-line version `0.200.0`
+- API artifact version `0.200.0`
+- API contract `3`, declared as `Verifier.API`
+- default API range `[3,4)`, derived as `Verifier.API_RANGE`
 
 The wrapper uses Gradle `9.7.1` and verifies SHA-256
 `acd53f1edaf02f1a8ff99879f8a34b302661a057d9b063ae9e35b552f804d20a`.
@@ -127,7 +127,7 @@ The `sacred` extension has these properties:
 - `website`
 - `repository`
 - `conflicts`, with `conflictsWith(id)`
-- `apiRange`, defaulting to `[2,3)`
+- `apiRange`, defaulting to `[3,4)`
 - `loaderRange`
 - `apiVersion`
 - `installTo`
@@ -140,12 +140,12 @@ API range that excludes `Verifier.API`, and an unreadable loader range.
 `apiRange`, `loaderRange`, and `apiVersion` are different values:
 
 ```toml
-api = "[2,3)"
+api = "[3,4)"
 loader = "[0.1.20,)"
 ```
 
 `api` names compatible API contracts. Authors may widen or narrow it, but the
-range must contain contract `2`, which is the contract this toolchain builds.
+range must contain contract `3`, which is the contract this toolchain builds.
 Both `Descriptor.generate` and the packed-jar verifier enforce that rule.
 
 `loader` names compatible Sacred Mod Loader releases. It is omitted when
@@ -154,7 +154,7 @@ because this repository cannot establish which launcher releases exist.
 
 `apiVersion` names the Maven artifact
 `dev.ancaria.coderpack:api:<apiVersion>`. The plugin adds it as `compileOnly`
-only when the property has a value. Generated projects set it to `0.102.0`. The
+only when the property has a value. Generated projects set it to `0.200.0`. The
 loader already provides the API. Packing another copy can produce
 `ClassCastException` between classes with identical names.
 
@@ -316,7 +316,9 @@ Java applies only `dev.ancaria.coderpack`. The plugin sets
 Kotlin applies `kotlin("jvm")`, uses
 `implementation(kotlin("stdlib"))`, and sets `jvmTarget` to `JVM_21`. It also
 declares `dev.ancaria.coderpack:api-kotlin` at `apiVersion`, which coderpack
-publishes beside the API and which the Kotlin entrypoints use. That one is
+publishes beside the API. The Kotlin entrypoints use none of it: they extend
+the Java `SacredMod` class and call the API's getters as properties, so the
+dependency is there for the author, not for the generated code. That one is
 `implementation` rather than `compileOnly` on purpose: the loader provides the
 API and does not provide this, so the mod packs it. It is inline extensions
 over the API and its package is `dev.ancaria.coderpack.ktx`, outside the
@@ -429,9 +431,9 @@ packaging, command-line exit status, or index generation.
 
 | Check | Errors | Warnings |
 |---|---|---|
-| `Declaration` | Unreadable jar, missing `META-INF/declaration.toml`, missing `id`, `entrypoint`, or `api`, unreadable ranges, API range excluding contract `2` | Invalid id, missing version, invalid conflict id, self-conflict |
+| `Declaration` | Unreadable jar, missing `META-INF/declaration.toml`, missing `id`, `entrypoint`, or `api`, unreadable ranges, API range excluding contract `3` | Invalid id, missing version, invalid conflict id, self-conflict |
 | `Contents` | Loader API classes inside the jar, top-level signature files under `META-INF` | Zygote classes, class files above version 65 |
-| `Entrypoint` | Missing, non-public, abstract, incompatible entrypoint, or missing public no-argument constructor | Unreadable class version, external superclass that prevents proof of `SacredMod` implementation |
+| `Entrypoint` | Missing or abstract entrypoint, one whose superclass chain does not reach the `SacredMod` class, one that implements `SacredMod` as the API 2 interface, or no no-argument constructor | Unreadable class version, external superclass that prevents proof of `SacredMod` inheritance, non-public entrypoint class or no-argument constructor |
 | `Listeners` | `@Subscribe` with a parameter count other than one, a non-event parameter, a return that is not that event's own `Mutation`, or a `MONITOR` method that returns one | Non-public listener |
 
 The exact id pattern is `[a-z0-9]([a-z0-9-]*[a-z0-9])?`.
@@ -528,7 +530,7 @@ reference in a task action.
 
 `SacredPluginTest` currently has eight TestKit cases. They cover fat-jar
 packaging, `build` for a mod whose id is its project name, the generated
-`[2,3)` API range, verification before copy, id validation, custom API and
+`[3,4)` API range, verification before copy, id validation, custom API and
 loader ranges, omitted loader ranges, API ranges that exclude the current
 contract, and invalid range syntax.
 
@@ -558,8 +560,10 @@ packages `api-kotlin-<apiVersion>.jar` into the same directory, because the test
 offers one `flatDir` repository and a generated Kotlin mod resolves both
 coordinates from it. That stub is written out rather than borrowed, since the
 linter's fixtures are Java. It holds exactly the declarations the Kotlin
-templates call and nothing else, so a template that starts using another
-extension has to add it there too or stop compiling.
+templates call and nothing else, which is currently none, so a template that
+starts using an extension has to add it there too or stop compiling. Generated
+settings put `mavenLocal()` first, so when coderpack has published the API at
+`apiVersion` locally the test compiles against that instead of the stubs.
 
 `NamesTest`, `ScaffoldTest`, and `NewTest` cover naming, all 12 combinations,
 placeholder precedence, unresolved placeholders, `${{ ... }}` preservation,
@@ -568,9 +572,14 @@ and exact generated file sets.
 
 ### Verifier tests
 
-`VerifierTest` currently has 25 cases. `RangesTest` has 6. They build real jars
+`VerifierTest` currently has 29 cases. `RangesTest` has 6. They build real jars
 from `verify/src/fixtures/java`, isolate one rule where applicable, and assert
 the exact findings count. Do not replace them with mocked jars.
+
+`verify/src/legacy/java` is a second fixture source set with a stub of the API
+2 `SacredMod` interface and `demo.LegacyMod`, which implements it. It cannot
+share a source set with the current stub, which declares the same class name.
+The test task passes both output directories, fixtures first.
 
 ## Publishing and release
 

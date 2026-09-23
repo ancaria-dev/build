@@ -66,17 +66,20 @@ Java is the default language. `--language kotlin` writes
 `src/main/kotlin/mods/mymod/MyMod.kt` and configures the Kotlin plugin.
 `--language groovy` does the same for Groovy.
 
+Every entrypoint extends the abstract class `SacredMod` and overrides
+`onLoad()`. `getContext()` returns the mod's context from the first line of the
+class on, and listeners are registered through
+`getContext().getRegistry().getEventRegistry()`. The Java and Groovy `mod`
+entrypoints register an annotated `@Subscribe` method. The Kotlin one extends
+the same Java class, reads the API's getters as properties, and registers a
+lambda: `context.registry.eventRegistry.on(Hero::class.java) { }`.
+
 A Kotlin project gets one dependency the other two do not:
-`dev.ancaria.coderpack:api-kotlin`, the loader API said in Kotlin. Its
-entrypoint extends the `SacredMod` class from that module, which keeps the
-context and hands it to `Context.load()` as a receiver, and registers its
-listener as `on<Hero> { }` rather than as an annotated method. It adds no
-capability: every declaration in it forwards to the Java API. Events stay
-read-only, and a listener on a decidable event answers with
-`mutate { Gold.Mutation.change(it.value * 2) }` inside `on<Gold> { }`.
-Deleting the dependency and writing `@Subscribe` instead is a supported way to
-have a Kotlin mod. The module is `implementation`, not `compileOnly`, because
-the loader hands a mod the API and not this.
+`dev.ancaria.coderpack:api-kotlin`, Kotlin extensions over the same API. It
+adds no capability, since every declaration in it forwards to the Java API,
+and the generated entrypoint uses none of it, so deleting the dependency is a
+supported way to have a Kotlin mod. The module is `implementation`, not
+`compileOnly`, because the loader hands a mod the API and not this.
 
 The build script language is a separate choice. `--dsl groovy` writes
 `build.gradle` and `settings.gradle` instead of the `.kts` files. Without that
@@ -281,14 +284,14 @@ sacred {
     displayName = "My Mod"                            // what a player reads
     description = "One sentence, shown under the name in the mod list"
     version = "1.0.0"                                 // defaults to the project version
-    entrypoint = "demo.MyMod"                         // the class implementing SacredMod
+    entrypoint = "demo.MyMod"                         // the class extending SacredMod
     authors = listOf("MairwunNx (Pavel Erokhin)")     // or author("MairwunNx (Pavel Erokhin)"), one at a time
     website = "https://ancaria.dev"
     repository = "https://github.com/ancaria-dev/mods"
     conflicts = listOf("other-mod")                   // or conflictsWith("other-mod")
-    apiRange = "[2,3)"                                // API contracts this mod supports
+    apiRange = "[3,4)"                                // API contracts this mod supports
     loaderRange = "[0.1.20,)"                         // optional loader release range
-    apiVersion = "0.102.0"                            // added as compileOnly
+    apiVersion = "0.200.0"                            // added as compileOnly
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
 }
 ```
@@ -297,8 +300,8 @@ Only `id` and `entrypoint` are required. `displayName` defaults to `id`, and
 the descriptor version defaults to the project version. Other optional values
 are omitted when blank or unset.
 
-The generated descriptor uses Maven range notation. `api = "[2,3)"` means the
-mod supports API contract 2 and stops before contract 3. The default is the
+The generated descriptor uses Maven range notation. `api = "[3,4)"` means the
+mod supports API contract 3 and stops before contract 4. The default is the
 current contract and no other. Authors may widen or narrow the range, but it
 must still contain the contract used by this toolchain.
 
@@ -307,7 +310,7 @@ Mod Loader release. The plugin checks its syntax but cannot prove compatibility
 with loader releases.
 
 `apiVersion` is different from `apiRange`. It is the Maven artifact version of
-`dev.ancaria.coderpack:api`, currently `0.102.0`, and the plugin adds that
+`dev.ancaria.coderpack:api`, currently `0.200.0`, and the plugin adds that
 dependency as `compileOnly`.
 
 Build or install the mod with:
@@ -355,8 +358,11 @@ The linter reports errors for:
 - a descriptor without `id`, `entrypoint`, or `api`
 - an invalid API range, one that excludes this toolchain's API contract, or an
   invalid loader range
-- a missing, non-public, abstract, or incompatible entrypoint
-- an entrypoint without a public no-argument constructor
+- a missing or abstract entrypoint, or one that does not extend the
+  `SacredMod` class, directly or through its own superclasses
+- an entrypoint that still implements `SacredMod` as the interface it was up
+  to API 2
+- an entrypoint without a no-argument constructor
 - loader API classes packed into the mod jar
 - a `@Subscribe` method with the wrong parameter count or type, a return type
   other than `void` or that event's own `Mutation`, or a `MONITOR` method that
@@ -365,7 +371,8 @@ The linter reports errors for:
 
 Warnings do not fail the build. They cover invalid ids, missing versions,
 invalid or self-referential conflicts, packed zygote classes, class files newer
-than Java 21, entrypoint inheritance that cannot be resolved from the jar, and
+than Java 21, entrypoint inheritance that cannot be resolved from the jar, a
+non-public entrypoint class or constructor, which the loader still reaches, and
 non-public listeners.
 
 A failed build looks like this:

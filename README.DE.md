@@ -75,18 +75,22 @@ letzte Pfad `src/main/kotlin/mods/mymod/MyMod.kt`, und das Build-Skript wendet
 zusätzlich das Kotlin-Plugin an. `--language groovy` erzeugt entsprechend eine
 `.groovy`-Datei.
 
+Jeder Einstiegspunkt erbt von der abstrakten Klasse `SacredMod` und
+überschreibt `onLoad()`. `getContext()` liefert den Context des Mods ab der
+ersten Zeile der Klasse, und Listener werden über
+`getContext().getRegistry().getEventRegistry()` angemeldet. Die Java- und
+Groovy-Einstiegspunkte der Vorlage `mod` melden eine `@Subscribe`-Methode an.
+Der Kotlin-Einstiegspunkt erbt von derselben Java-Klasse, liest die Getter der
+API als Properties und meldet ein Lambda an:
+`context.registry.eventRegistry.on(Hero::class.java) { }`.
+
 Ein Kotlin-Projekt bekommt eine Abhängigkeit, die die beiden anderen nicht
-haben: `dev.ancaria.coderpack:api-kotlin`, dieselbe Loader-API in Kotlin. Der
-Einstiegspunkt erbt von der Klasse `SacredMod` aus diesem Modul, die den
-Context festhält und ihn `Context.load()` als Receiver übergibt, und meldet
-seinen Listener als `on<Hero> { }` statt als annotierte Methode an. Das Modul
-kann nichts, was die Java-API nicht kann: jede Deklaration ruft eine Methode
-dort auf. Events bleiben schreibgeschützt, und ein Listener auf einem
-entscheidbaren Event antwortet mit `mutate { Gold.Mutation.change(it.value * 2) }`
-innerhalb von `on<Gold> { }`. Die Abhängigkeit zu streichen und
-stattdessen `@Subscribe` zu schreiben, ist ein unterstützter Weg zu einem
-Kotlin-Mod. Eingebunden wird es als `implementation`, nicht als `compileOnly`,
-weil der Loader einem Mod die API reicht und dieses Modul nicht.
+haben: `dev.ancaria.coderpack:api-kotlin`, Kotlin-Erweiterungen über dieselbe
+API. Das Modul kann nichts, was die Java-API nicht kann, und der erzeugte
+Einstiegspunkt nutzt nichts davon. Die Abhängigkeit zu streichen ist deshalb
+ein unterstützter Weg zu einem Kotlin-Mod. Eingebunden wird es als
+`implementation`, nicht als `compileOnly`, weil der Loader einem Mod die API
+reicht und dieses Modul nicht.
 
 Die Sprache des Build-Skripts wird unabhängig davon gewählt. `--dsl groovy`
 schreibt `build.gradle` und `settings.gradle` anstelle der beiden
@@ -309,12 +313,12 @@ sacred {
     id = "my-mod"                                     // Kleinbuchstaben, Ziffern, Bindestriche
     displayName = "My Mod"                            // was Spieler im Launcher sehen
     description = "Ein Satz, unter dem Namen in der Modliste"
-    entrypoint = "mods.mymod.MyMod"                   // die Klasse, die SacredMod implementiert
+    entrypoint = "mods.mymod.MyMod"                   // die Klasse, die SacredMod erweitert
     author("Dein Name")
 
     // Der Loader stellt diese API bereit. Sie wird zum Kompilieren verwendet,
     // aber nicht in das JAR gepackt.
-    apiVersion = "0.102.0"                            // wird als compileOnly ergänzt
+    apiVersion = "0.200.0"                            // wird als compileOnly ergänzt
 
     // Ziel für installSacredMod. Der Spieleordner kommt als Property:
     //   gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
@@ -326,7 +330,7 @@ Nur `id` und `entrypoint` sind Pflicht. Fehlen optionale Angaben, erzeugt das
 Plugin trotzdem einen gültigen Deskriptor. Eine ungültige `id` stoppt den Build,
 bevor ein JAR entsteht, das der Launcher später nicht auflisten könnte.
 
-Ohne eigene Angabe schreibt das Plugin `api = "[2,3)"` in den Deskriptor. Das
+Ohne eigene Angabe schreibt das Plugin `api = "[3,4)"` in den Deskriptor. Das
 ist der Bereich der API-Verträge, für die der Mod gebaut wurde. `apiRange` darf
 enger oder weiter gefasst werden, muss aber den Vertrag dieser Toolchain
 enthalten. `loaderRange` ist optional und begrenzt die unterstützten Versionen
@@ -334,7 +338,7 @@ des Sacred Mod Loader. Beide Werte verwenden die Bereichsnotation von Maven.
 
 `apiVersion` bezeichnet etwas anderes: die Artefaktversion von
 `dev.ancaria.coderpack:api`, gegen die der Quelltext kompiliert wird. Sie ändert
-sich bei Veröffentlichungen und ist derzeit `0.102.0`. Der API-Vertrag wird nur
+sich bei Veröffentlichungen und ist derzeit `0.200.0`. Der API-Vertrag wird nur
 bei inkompatiblen Änderungen hochgezählt.
 
 Danach zwei Befehle:
@@ -377,11 +381,13 @@ Prüfung wird das gepackte JAR kopiert. Der Linter liest Deskriptor und Bytecode
 auf dieselbe Weise wie der Loader und meldet unter anderem folgende Fehler:
 
 - kein `META-INF/declaration.toml`, oder eines ohne `id`, `entrypoint` oder `api`
-- ein ungültiger `api`-Bereich oder ein Bereich, der API-Vertrag 2 nicht enthält
+- ein ungültiger `api`-Bereich oder ein Bereich, der API-Vertrag 3 nicht enthält
 - ein ungültiger `loader`-Bereich
-- ein `entrypoint`, der nicht im JAR liegt, nicht `public` ist, abstrakt ist,
-  keinen öffentlichen Konstruktor ohne Argumente hat oder `SacredMod` nicht
-  implementiert
+- ein `entrypoint`, der nicht im JAR liegt, abstrakt ist, keinen Konstruktor
+  ohne Argumente hat oder weder direkt noch über eigene Oberklassen von der
+  Klasse `SacredMod` erbt
+- ein `entrypoint`, der `SacredMod` noch als Interface implementiert, wie es
+  bis API 2 eines war
 - die mitgepackte Loader-API
 - eine `@Subscribe`-Methode, die nicht genau ein Event nimmt oder etwas
   anderes als `void` oder die `Mutation` ihres Events zurückgibt, und eine
@@ -392,7 +398,9 @@ auf dieselbe Weise wie der Loader und meldet unter anderem folgende Fehler:
 Warnungen stoppen den Build nicht. Dazu gehören eine ungültige Mod-ID, eine
 fehlende Version, ungültige oder selbstbezügliche Konflikte, mitgepackte
 Zygote-Klassen, Klassendateien neuer als Java 21, eine aus dem JAR nicht
-auflösbare Vererbung des Einstiegspunkts und nicht öffentliche Listener.
+auflösbare Vererbung des Einstiegspunkts, eine nicht öffentliche Klasse oder
+ein nicht öffentlicher Konstruktor des Einstiegspunkts, die der Loader trotzdem
+erreicht, und nicht öffentliche Listener.
 
 Ein Build, der darüber stolpert, hält so an:
 
