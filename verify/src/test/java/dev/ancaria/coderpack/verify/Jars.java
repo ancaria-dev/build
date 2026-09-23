@@ -26,7 +26,7 @@ final class Jars {
             name = "Demo Mod"
             version = "1.0.0"
             entrypoint = "demo.DemoMod"
-            api = "2"
+            api = "3"
             """;
 
     private Jars() {

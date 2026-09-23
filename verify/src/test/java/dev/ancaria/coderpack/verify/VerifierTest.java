@@ -44,7 +44,7 @@ class VerifierTest {
         Finding found = only(verify("""
                 id = "demo-mod"
                 version = "1.0.0"
-                api = "2"
+                api = "3"
                 """, DEMO));
         assertTrue(found.detail().contains("No entrypoint"), found.detail());
     }
@@ -62,7 +62,7 @@ class VerifierTest {
 
     @Test
     void finds_a_mod_built_against_another_api() {
-        Finding found = only(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"1\""),
+        Finding found = only(verify(Jars.DECLARATION.replace("api = \"3\"", "api = \"1\""),
                                     DEMO));
         assertTrue(found.detail().contains("api = “1”"), found.detail());
         assertTrue(found.detail().contains("API " + Verifier.API), found.detail());
@@ -71,8 +71,8 @@ class VerifierTest {
     /** A range covering this contract passes, however wide it is written. */
     @Test
     void accepts_a_range_that_covers_this_contract() {
-        for (String range : new String[] {Verifier.API_RANGE, "[1,3)", "[1,)", "[2]", "2"}) {
-            assertTrue(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"" + range + "\""),
+        for (String range : new String[] {Verifier.API_RANGE, "[1,4)", "[1,)", "[3]", "3"}) {
+            assertTrue(verify(Jars.DECLARATION.replace("api = \"3\"", "api = \"" + range + "\""),
                               DEMO).ok(), range);
         }
     }
@@ -80,15 +80,15 @@ class VerifierTest {
     /** And one that does not is refused, with the range in the message. */
     @Test
     void refuses_a_range_this_toolchain_is_outside_of() {
-        Finding found = only(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"[3,4)\""),
+        Finding found = only(verify(Jars.DECLARATION.replace("api = \"3\"", "api = \"[4,5)\""),
                                     DEMO));
         assertEquals(Level.ERROR, found.level());
-        assertTrue(found.detail().contains("[3,4)"), found.detail());
+        assertTrue(found.detail().contains("[4,5)"), found.detail());
     }
 
     @Test
     void finds_an_api_range_nothing_can_read() {
-        Finding found = only(verify(Jars.DECLARATION.replace("api = \"2\"", "api = \"[1,2\""),
+        Finding found = only(verify(Jars.DECLARATION.replace("api = \"3\"", "api = \"[1,2\""),
                                     DEMO));
         assertEquals(Level.ERROR, found.level());
         assertTrue(found.detail().contains("version range is invalid"), found.detail());
@@ -113,6 +113,8 @@ class VerifierTest {
     @Test
     void the_default_range_covers_the_contract_it_was_derived_from() {
         assertTrue(Verifier.builds(Verifier.API_RANGE), Verifier.API_RANGE);
+        // Spelled out once, so raising the contract is a decision a test notices.
+        assertEquals("[3,4)", Verifier.API_RANGE);
     }
 
     @Test

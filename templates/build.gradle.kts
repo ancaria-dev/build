@@ -123,7 +123,7 @@ val wrapperResources = tasks.register<Copy>("wrapperResources") {
 
 // Written by the build so the tool cannot name a plugin version nobody
 // published. `api` is the artifact version of dev.ancaria.coderpack:api, which
-// moves on its own and is not the api = "[2,3)" line in a descriptor.
+// moves on its own and is not the api = "[3,4)" line in a descriptor.
 val versionResource = tasks.register<WriteProperties>("versionResource") {
     description = "Records the versions a scaffolded project is written with"
     destinationFile = layout.buildDirectory.file(

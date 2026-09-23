@@ -32,7 +32,7 @@ public final class Verifier {
      * {@code Api.VERSION} in coderpack and one in {@code mods.API} in the
      * launcher.
      */
-    public static final String API = "2";
+    public static final String API = "3";
 
     /**
      * The range {@code Descriptor} writes when a mod author says nothing: this
@@ -51,8 +51,8 @@ public final class Verifier {
      * <p>Used twice: by the linter on a packed jar, and by the Gradle plugin on
      * what an author wrote, before it is written into a descriptor at all. A mod
      * author may narrow or widen the range they claim, but not to something this
-     * toolchain cannot vouch for: a build that compiles against API 1 and
-     * declares API 2 is a claim nobody checked.
+     * toolchain cannot vouch for: a build that compiles against API 2 and
+     * declares API 3 is a claim nobody checked.
      *
      * @throws IllegalArgumentException when the text is not a range
      */
