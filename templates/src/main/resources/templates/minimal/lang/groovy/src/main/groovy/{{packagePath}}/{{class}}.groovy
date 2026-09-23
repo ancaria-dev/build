@@ -1,6 +1,5 @@
 package {{package}}
 
-import dev.ancaria.coderpack.api.Context
 import dev.ancaria.coderpack.api.SacredMod
 import groovy.transform.CompileStatic
 
@@ -9,10 +8,10 @@ import groovy.transform.CompileStatic
 // error rather than a MissingMethodException mid-game. Drop the annotation on a
 // class that wants Groovy's dynamic half.
 @CompileStatic
-class {{class}} implements SacredMod {
+class {{class}} extends SacredMod {
 
     @Override
-    void onLoad(Context context) {
+    void onLoad() {
         context.log('Loaded.')
     }
 }

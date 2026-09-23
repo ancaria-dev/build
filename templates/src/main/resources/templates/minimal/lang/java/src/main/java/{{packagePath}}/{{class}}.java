@@ -1,13 +1,12 @@
 package {{package}};
 
-import dev.ancaria.coderpack.api.Context;
 import dev.ancaria.coderpack.api.SacredMod;
 
 /** {{description}} */
-public final class {{class}} implements SacredMod {
+public final class {{class}} extends SacredMod {
 
     @Override
-    public void onLoad(Context context) {
-        context.log("Loaded.");
+    public void onLoad() {
+        getContext().log("Loaded.");
     }
 }

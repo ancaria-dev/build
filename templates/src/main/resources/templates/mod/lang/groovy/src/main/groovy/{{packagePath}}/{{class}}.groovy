@@ -1,6 +1,5 @@
 package {{package}}
 
-import dev.ancaria.coderpack.api.Context
 import dev.ancaria.coderpack.api.SacredMod
 import dev.ancaria.coderpack.api.Subscribe
 import dev.ancaria.coderpack.api.event.Hero
@@ -11,15 +10,12 @@ import groovy.transform.CompileStatic
 // is a compile error rather than a MissingMethodException mid-game. Drop the
 // annotation on a class that wants Groovy's dynamic half.
 @CompileStatic
-class {{class}} implements SacredMod {
-
-    private Context context
+class {{class}} extends SacredMod {
 
     @Override
-    void onLoad(Context context) {
-        this.context = context
+    void onLoad() {
         // Every public @Subscribe method on this object becomes a listener.
-        context.events().register(this)
+        context.registry.eventRegistry.register(this)
         context.log('Loaded.')
     }
 
@@ -30,6 +26,6 @@ class {{class}} implements SacredMod {
      */
     @Subscribe
     void onHero(Hero hero) {
-        context.log('Hero reached level ' + hero.level() + '.')
+        context.log('Hero reached level ' + hero.level + '.')
     }
 }

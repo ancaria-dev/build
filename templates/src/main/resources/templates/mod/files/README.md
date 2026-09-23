@@ -39,19 +39,23 @@ then start the game.
 └── gradlew, gradlew.bat, gradle/wrapper/, .gitignore
 ```
 
-`{{class}}` is loaded once and handed the mod context. Register listeners
-there. In Java and Groovy a listener is a public `@Subscribe` method with one
-event parameter, and the parameter type decides which events it receives. It
-returns `void` to observe. On an event that can be decided, such as `Gold` or
-`Damage`, it can instead return that event's own `Mutation`, for example
+`{{class}}` extends `SacredMod`. The loader creates it once and calls
+`onLoad()`, and `getContext()` returns the mod context from then on. Register
+listeners in `onLoad()`, through `getContext().getRegistry().getEventRegistry()`.
+In Java and Groovy a listener is a public `@Subscribe` method with one event
+parameter, and the parameter type decides which events it receives. It returns
+`void` to observe. On an event that can be decided, such as `Gold` or `Damage`,
+it can instead return that event's own `Mutation`, for example
 `Gold.Mutation.change(...)`. Events are read-only, so the returned mutation is
 the only way to change the outcome. A `MONITOR` listener must return `void`.
 
-The Kotlin entrypoint registers the same listener as `on<Hero> { }`, through
-`dev.ancaria.coderpack:api-kotlin`: the same bus, said in Kotlin. There a
-listener decides with `mutate { Gold.Mutation.change(...) }` inside the
-`on<Gold> { }` body. `@Subscribe` still works there, and the extensions are
-still optional.
+The Kotlin entrypoint registers the same listener as a lambda, with
+`on(Hero::class.java) { }`: the same bus, and the API's getters read as
+properties there, so `context.registry.eventRegistry` and `hero.level`. A
+lambda decides through `decide(Gold::class.java) { Gold.Mutation.change(...) }`.
+`@Subscribe` works in Kotlin too.
 
 The world does not exist yet at that point. Wait for a `Hero` event or
-`World.Phase.LOADED` before touching player state.
+`World.Phase.LOADED` before touching player state. `onUnload()` runs when the
+mod is unregistered or the loader shuts down; its listeners are already gone by
+then.

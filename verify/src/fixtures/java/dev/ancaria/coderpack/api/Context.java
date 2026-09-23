@@ -1,17 +1,15 @@
 package dev.ancaria.coderpack.api;
 
 /**
- * Stub. What a mod is handed on load.
+ * Stub. What a mod reaches through {@code getContext()}.
  *
  * <p>Wider than the linter's own fixtures need, because the scaffolder compiles
- * a generated mod against these files too and a generated entrypoint registers
- * its listeners here.
+ * a generated mod against these files too and a generated entrypoint logs and
+ * registers its listeners through here.
  */
 public interface Context {
 
-    String id();
-
-    Events events();
-
     void log(String message);
+
+    Registry getRegistry();
 }

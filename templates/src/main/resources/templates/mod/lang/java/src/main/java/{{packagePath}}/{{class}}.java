@@ -1,21 +1,17 @@
 package {{package}};
 
-import dev.ancaria.coderpack.api.Context;
 import dev.ancaria.coderpack.api.SacredMod;
 import dev.ancaria.coderpack.api.Subscribe;
 import dev.ancaria.coderpack.api.event.Hero;
 
 /** {{description}} */
-public final class {{class}} implements SacredMod {
-
-    private Context context;
+public final class {{class}} extends SacredMod {
 
     @Override
-    public void onLoad(Context context) {
-        this.context = context;
+    public void onLoad() {
         // Every public @Subscribe method on this object becomes a listener.
-        context.events().register(this);
-        context.log("Loaded.");
+        getContext().getRegistry().getEventRegistry().register(this);
+        getContext().log("Loaded.");
     }
 
     /**
@@ -25,6 +21,6 @@ public final class {{class}} implements SacredMod {
      */
     @Subscribe
     public void onHero(Hero hero) {
-        context.log("Hero reached level " + hero.level() + ".");
+        getContext().log("Hero reached level " + hero.getLevel() + ".");
     }
 }

@@ -39,21 +39,24 @@ launcher, then start the game.
 └── gradlew, gradlew.bat, gradle/wrapper/, .gitignore
 ```
 
-The loader loads `{{class}}` once and passes it a `Context`. This minimal
-template registers no listeners. It suits a mod that only uses
-`context.game()`, as well as one that keeps its listeners in separate classes.
+`{{class}}` extends `SacredMod`. The loader creates it once through its
+no-argument constructor and calls `onLoad()`. `getContext()` returns the mod’s
+`Context` from the first line of the class on: `log`, `print`, `getGame()`,
+`getDescriptor()`, and `getRegistry()`. `onUnload()` runs when the mod is
+unregistered or the loader shuts down. This minimal template registers no
+listeners. It suits a mod that only uses `getContext().getGame()`, as well as
+one that keeps its listeners in separate classes.
 
-To receive events, pass an object to `context.events().register(...)`. Each
-listener must be a public method marked with `@Subscribe` and accept exactly one
-event parameter. The parameter’s type determines which events the method
-receives. The method returns `void` to observe. On an event that can be
-decided, such as `Gold` or `Damage`, it can instead return that event’s own
-`Mutation`, for example `Gold.Mutation.change(...)`. Events are read-only, so
-this is the only way to change the outcome. A `MONITOR` listener must return
-`void`.
+To receive events, pass an object to
+`getContext().getRegistry().getEventRegistry().register(...)`. Each listener
+must be a public method marked with `@Subscribe` and accept exactly one event
+parameter. The parameter’s type determines which events the method receives.
+The method returns `void` to observe. On an event that can be decided, such as
+`Gold` or `Damage`, it can instead return that event’s own `Mutation`, for
+example `Gold.Mutation.change(...)`. Events are read-only, so this is the only
+way to change the outcome. A `MONITOR` listener must return `void`.
 
-A Kotlin project has a second way in, from
-`dev.ancaria.coderpack:api-kotlin`, which the generated build script already
-depends on: `on<Hero> { }` registers one listener as a lambda, and
-`events { }` groups several. Both are the same bus as `@Subscribe`. Inside
-`on<Gold> { }`, `mutate { Gold.Mutation.change(...) }` decides the event.
+The same event registry also takes a lambda: `on(Hero.class, hero -> ...)`
+observes, and `decide(Gold.class, gold -> Gold.Mutation.change(...))` decides.
+In Kotlin the API’s getters read as properties, so the same call is
+`context.registry.eventRegistry.on(Hero::class.java) { hero -> }`.
