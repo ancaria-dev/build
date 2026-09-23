@@ -266,7 +266,7 @@ A Kotlin DSL build for a mod looks like this:
 
 ```kotlin
 plugins {
-    id("dev.ancaria.coderpack") version "0.101.1"
+    id("dev.ancaria.coderpack") version "0.200.0"
 }
 
 version = "1.0.0"
