@@ -65,14 +65,13 @@ class SacredPluginTest {
         write("src/main/java/demo/DemoMod.java", """
             package demo;
 
-            import dev.ancaria.coderpack.api.Context;
             import dev.ancaria.coderpack.api.SacredMod;
 
-            public final class DemoMod implements SacredMod {
+            public final class DemoMod extends SacredMod {
                 public static final String NAME = "demo";
 
                 @Override
-                public void onLoad(Context context) {
+                public void onLoad() {
                 }
             }
         """)
@@ -146,12 +145,11 @@ class SacredPluginTest {
         write("src/main/java/demo/DemoMod.java", """
             package demo;
 
-            import dev.ancaria.coderpack.api.Context;
             import dev.ancaria.coderpack.api.SacredMod;
 
-            public final class DemoMod implements SacredMod {
+            public final class DemoMod extends SacredMod {
                 @Override
-                public void onLoad(Context context) {
+                public void onLoad() {
                 }
             }
         """)
@@ -320,15 +318,13 @@ class SacredPluginTest {
 
     /** Just enough of the API for a mod to be one. The loader provides the rest. */
     private fun stubApi() {
-        write("src/loaderApi/java/dev/ancaria/coderpack/api/Context.java", """
-            package dev.ancaria.coderpack.api;
-            public interface Context {
-            }
-        """)
         write("src/loaderApi/java/dev/ancaria/coderpack/api/SacredMod.java", """
             package dev.ancaria.coderpack.api;
-            public interface SacredMod {
-                void onLoad(Context context);
+            public abstract class SacredMod {
+                protected SacredMod() {
+                }
+                public void onLoad() {
+                }
             }
         """)
     }

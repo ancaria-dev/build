@@ -137,25 +137,73 @@ class VerifierTest {
     @Test
     void finds_an_entrypoint_that_is_not_a_mod() {
         Finding found = only(entry("demo.NotAMod", "demo/NotAMod.class"));
-        assertTrue(found.detail().contains("doesn’t implement"), found.detail());
+        assertEquals(Level.ERROR, found.level());
+        assertTrue(found.detail().contains("doesn’t extend"), found.detail());
+    }
+
+    /** SacredMod was an interface up to API 2. A class that still implements it cannot load. */
+    @Test
+    void finds_an_entrypoint_written_for_the_old_interface() {
+        Finding found = only(entry("demo.LegacyMod", "demo/LegacyMod.class"));
+        assertEquals(Level.ERROR, found.level());
+        assertTrue(found.detail().contains("implements SacredMod as an interface"),
+                   found.detail());
+        assertTrue(found.detail().contains("extends SacredMod"), found.detail());
+    }
+
+    /** A mod may reach SacredMod through an abstract class of its own. */
+    @Test
+    void accepts_an_entrypoint_that_extends_its_own_abstract_mod() {
+        Report report = verify(Jars.DECLARATION.replace("demo.DemoMod", "demo.ChildMod"),
+                               "demo/ChildMod.class", "demo/AbstractMod.class");
+        assertEquals(0, report.findings().size(), report.toString());
+    }
+
+    /** The same mod without its superclass in the jar: nothing can be said for certain. */
+    @Test
+    void warns_when_the_superclass_is_outside_the_jar() {
+        Report report = entry("demo.ChildMod", "demo/ChildMod.class");
+        Finding found = only(report);
+        assertEquals(Level.WARNING, found.level());
+        assertTrue(found.detail().contains("superclass outside the jar"), found.detail());
+        assertTrue(report.ok());
     }
 
     @Test
     void finds_an_entrypoint_that_cannot_be_instantiated() {
         Finding found = only(entry("demo.AbstractMod", "demo/AbstractMod.class"));
+        assertEquals(Level.ERROR, found.level());
         assertTrue(found.detail().contains("is abstract"), found.detail());
     }
 
     @Test
     void finds_an_entrypoint_with_no_no_argument_constructor() {
         Finding found = only(entry("demo.NoCtor", "demo/NoCtor.class"));
+        assertEquals(Level.ERROR, found.level());
         assertTrue(found.detail().contains("no no-argument constructor"), found.detail());
     }
 
+    /**
+     * The loader overrides the access check before it calls the constructor, so
+     * a package-private entrypoint still loads. Said, but not held against it.
+     */
     @Test
-    void finds_an_entrypoint_the_loader_cannot_reach() {
-        Finding found = only(entry("demo.HiddenMod", "demo/HiddenMod.class"));
+    void warns_about_an_entrypoint_that_is_not_public() {
+        Report report = entry("demo.HiddenMod", "demo/HiddenMod.class");
+        Finding found = only(report);
+        assertEquals(Level.WARNING, found.level());
         assertTrue(found.detail().contains("isn’t public"), found.detail());
+        assertTrue(report.ok());
+    }
+
+    @Test
+    void warns_about_a_constructor_that_is_not_public() {
+        Report report = entry("demo.HiddenCtor", "demo/HiddenCtor.class");
+        Finding found = only(report);
+        assertEquals(Level.WARNING, found.level());
+        assertTrue(found.detail().contains("non-public no-argument constructor"),
+                   found.detail());
+        assertTrue(report.ok());
     }
 
     @Test

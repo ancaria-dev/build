@@ -1,10 +1,13 @@
 package dev.ancaria.coderpack.verify;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -17,8 +20,13 @@ import java.util.zip.ZipOutputStream;
  */
 final class Jars {
 
-    /** Written by the build; see the test task in build.gradle.kts. */
-    private static final Path CLASSES = Path.of(System.getProperty("verify.fixtures"));
+    /**
+     * Written by the build; see the test task in build.gradle.kts. The first
+     * directory holding a class wins.
+     */
+    private static final List<Path> CLASSES = Arrays.stream(
+            System.getProperty("verify.fixtures").split(File.pathSeparator))
+            .map(Path::of).toList();
 
     /** What the plugin writes for the fixture mod, and what every case starts from. */
     static final String DECLARATION = """
@@ -46,12 +54,18 @@ final class Jars {
             }
             for (String entry : entries) {
                 write(zip, entry, entry.endsWith(".class")
-                        ? Files.readAllBytes(CLASSES.resolve(entry)) : new byte[0]);
+                        ? Files.readAllBytes(compiled(entry)) : new byte[0]);
             }
         } catch (IOException failure) {
             throw new UncheckedIOException(failure);
         }
         return jar;
+    }
+
+    private static Path compiled(String entry) {
+        return CLASSES.stream().map(directory -> directory.resolve(entry))
+                      .filter(Files::isRegularFile).findFirst()
+                      .orElseThrow(() -> new IllegalArgumentException("No fixture " + entry));
     }
 
     private static void write(ZipOutputStream zip, String name, byte[] bytes)

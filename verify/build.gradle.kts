@@ -41,6 +41,11 @@ tasks.withType<JavaCompile>().configureEach {
 // of the API in this repository rather than two that drift.
 val fixtures = sourceSets.create("fixtures")
 
+// A mod written for API 2, when SacredMod was an interface. It cannot sit with
+// the fixtures above, whose SacredMod is the class, so it is compiled against a
+// stub of that old interface of its own. The test packs only the mod.
+val legacy = sourceSets.create("legacy")
+
 // The one fixture that breaks no rule, packed the way the plugin packs a mod --
 // its own classes and the descriptor, and no API. CI lints this jar with the
 // command line entry point, which is the half of the library the Gradle task
@@ -65,9 +70,13 @@ testing {
 }
 
 tasks.test {
-    dependsOn(tasks.named(fixtures.classesTaskName))
+    dependsOn(tasks.named(fixtures.classesTaskName), tasks.named(legacy.classesTaskName))
     inputs.files(fixtures.output).withPropertyName("fixtures")
-    systemProperty("verify.fixtures", fixtures.output.classesDirs.asPath)
+    inputs.files(legacy.output).withPropertyName("legacy")
+    // Fixtures first: both trees have a dev/ancaria/coderpack/api/SacredMod,
+    // and the current one is the one a test means.
+    systemProperty("verify.fixtures",
+                   (fixtures.output.classesDirs + legacy.output.classesDirs).asPath)
 }
 
 // Sources so an IDE can step into the linter from a failing build, and javadoc
