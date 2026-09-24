@@ -13,248 +13,92 @@
 
 # build
 
-Инструменты сборки модов для Sacred Gold.
+Инструменты сборки модов для Sacred Gold: Gradle-плагин, линтер и утилита
+`coderpack`, которая создаёт новые проекты.
 
-В `gradle/` находится плагин `dev.ancaria.coderpack`. Он создаёт дескриптор
-мода, собирает fat jar через Shadow, проверяет результат и устанавливает его в
-каталог игры. В `maven/` пока лежит только описание возможного Maven-плагина.
+Мод описывается одним блоком `sacred { }`. Плагин сам пишет дескриптор мода,
+упаковывает код и библиотеки в один jar и проверяет его. Jar, который
+загрузчик бы отверг, до папки игры не доберётся.
 
-Каталог `verify/` содержит Java-библиотеку, которая проверяет готовый jar без
-загрузки классов. Её вызывают задача Gradle `verifySacredMod` и команда
-`coderpack verify`.
+Здесь описана сборка. Сам API модов, события и слушатели описаны в
+[coderpack](https://github.com/ancaria-dev/coderpack).
 
-В `templates/` собирается командная строка `coderpack`. Она создаёт проекты,
-проверяет jar-файлы и генерирует индекс репозитория модов. Тот же модуль
-публикуется как библиотека `dev.ancaria.coderpack:templates` для плагина
-IntelliJ IDEA.
+## Как начать
 
-## Создание мода
+Нужен JDK. Gradle ставить не нужно, он приходит вместе с проектом.
 
-```
-coderpack new my-mod
-cd my-mod
-gradlew assembleSacredMod
-```
+1. Скачайте `coderpack-<версия>.zip` из
+   [релизов](https://github.com/ancaria-dev/build/releases), распакуйте его и
+   добавьте папку `bin` в PATH.
+2. Создайте проект и соберите его:
 
-Последняя команда создаёт проверенный jar в `build/sacred-mod/`. Для сборки
-нужен JDK. Gradle устанавливать отдельно не требуется, поскольку новый проект
-получает wrapper.
+   ```
+   coderpack new my-mod
+   cd my-mod
+   gradlew assembleSacredMod
+   ```
 
-Архив `coderpack` прикладывается к каждому релизу этого репозитория. Из
-исходников локальную копию можно собрать так:
+3. Скопируйте jar из `build/sacred-mod/` в `<Sacred Gold>/mods` или поручите
+   это Gradle:
 
-```
-cd gradle
-./gradlew :templates:installDist
-../templates/build/install/coderpack/bin/coderpack new my-mod
-```
+   ```
+   gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
+   ```
 
-Проект `my-mod/` по умолчанию содержит:
+Удобнее в IDE? [Плагин для IntelliJ IDEA](https://github.com/ancaria-dev/idea)
+создаёт тот же проект через File → New → Project.
+
+## Новый проект
+
+В команде `coderpack new my-mod` имя `my-mod` становится id мода. Утилита
+проверяет его до того, как что-либо записать, и выводит из него отображаемое
+имя `My Mod`, пакет `mods.mymod` и класс `MyMod`. В проекте появятся:
 
 ```
 .gitignore
 README.md
 build.gradle.kts                     заполненный блок sacred { }
-settings.gradle.kts                  mavenLocal, затем портал плагинов
+settings.gradle.kts                  сначала mavenLocal, затем портал плагинов
 registry.toml                        описание репозитория модов
-.github/workflows/build.yml          сборка, индекс и релиз
-dependencies.json                    версия coderpack, которую скачивает CI
+.github/workflows/build.yml          сборка и релиз каждой новой версии
+dependencies.json                    версия coderpack для CI
 gradlew, gradlew.bat
 gradle/wrapper/gradle-wrapper.jar
 gradle/wrapper/gradle-wrapper.properties
-src/main/java/mods/mymod/MyMod.java  onLoad и рабочий слушатель
+src/main/java/mods/mymod/MyMod.java  onLoad и один рабочий слушатель
 ```
 
-По умолчанию исходники пишутся на Java, а файлы сборки используют Kotlin DSL.
-`--language kotlin` создаёт файл
-`src/main/kotlin/mods/mymod/MyMod.kt` и подключает Kotlin. Значение
-`--language groovy` выбирает Groovy. Опция `--dsl groovy` создаёт
-`build.gradle` и `settings.gradle` независимо от языка мода.
+Wrapper совпадает с wrapper этого репозитория: Gradle 9.7.1 с той же
+контрольной суммой SHA-256. Первая сборка запускается одной командой,
+какой бы Gradle ни стоял в системе.
 
-Любая точка входа наследуется от абстрактного класса `SacredMod` и
-переопределяет `onLoad()`. `getContext()` возвращает контекст мода с первой
-строки класса, а слушатели регистрируются через
-`getContext().getRegistry().getEventRegistry()`. Точки входа шаблона `mod` на
-Java и Groovy регистрируют метод с `@Subscribe`. Точка входа на Kotlin
-наследуется от того же Java-класса, читает геттеры API как свойства и
-регистрирует лямбду: `context.registry.eventRegistry.on(Hero::class.java) { }`.
-
-У проекта на Kotlin есть одна зависимость, которой нет у остальных двух:
-`dev.ancaria.coderpack:api-kotlin`, Kotlin-расширения поверх того же API. Новых
-возможностей модуль не даёт: каждое объявление вызывает метод из Java API, а
-сгенерированная точка входа не использует ни одного, поэтому убрать
-зависимость — поддерживаемый способ писать мод на Kotlin. Модуль подключается
-как `implementation`, а не `compileOnly`, потому что API загрузчик моду выдаёт,
-а этот модуль — нет.
-
-`--no-registry` исключает `registry.toml`, `dependencies.json` и
-`.github/workflows/build.yml`. Остальная часть проекта не меняется.
-
-`my-mod` служит идентификатором мода. Перед записью файлов он проверяется через
-`Ids.valid`. Из него выводятся отображаемое имя `My Mod`, пакет `mods.mymod` и
-класс `MyMod`.
-
-| Опция | Назначение |
+| Ключ | Что меняет |
 |---|---|
-| `--package dev.example.mymod` | Задаёт пакет и каталог точки входа |
-| `--display-name "Мой мод"` | Задаёт имя в лаунчере |
-| `--author "Ваше имя"` | Задаёт `authors`, иначе используется имя текущей учётной записи |
-| `--description "Одно предложение"` | Задаёт описание в списке модов |
-| `--mod-version 0.2.0` | Задаёт версию мода, по умолчанию `1.0.0` |
-| `--dir куда-нибудь/ещё` | Задаёт каталог, по умолчанию `./<name>` |
-| `--template minimal` | Выбирает шаблон |
-| `--language kotlin` | Выбирает `java`, `kotlin` или `groovy` |
-| `--dsl groovy` | Выбирает `kotlin` или `groovy` для файлов сборки |
-| `--repo https://github.com/me/my-mod` | Задаёт адрес репозитория и основу ссылок на релизы |
-| `--no-registry` | Не создаёт файлы репозитория модов |
+| `--package dev.example.mymod` | Пакет и папку точки входа |
+| `--display-name "My Splendid Mod"` | Имя, которое видит игрок |
+| `--author "Your Name"` | Значение `authors`. По умолчанию — текущая учётная запись |
+| `--description "One sentence"` | Строку под названием мода |
+| `--mod-version 0.2.0` | Версию мода. По умолчанию `1.0.0` |
+| `--dir somewhere/else` | Папку проекта. По умолчанию `./<name>` |
+| `--template minimal` | Шаблон: `mod` (по умолчанию) или `minimal` |
+| `--language kotlin` | Язык мода: `java` (по умолчанию), `kotlin` или `groovy` |
+| `--dsl groovy` | Язык сборочного скрипта: `kotlin` (по умолчанию) или `groovy` |
+| `--repo https://github.com/me/my-mod` | Адрес проекта для ссылок на скачивание |
+| `--no-registry` | Не создаёт `registry.toml`, `dependencies.json` и workflow |
 | `--git` | Выполняет `git init` и добавляет `--repo` как `origin` |
-| `--force` | Разрешает запись в непустой каталог |
+| `--force` | Пишет в непустую папку |
 
-Скаффолдер переносит в проект wrapper из этой сборки. Сейчас он закреплён на
-Gradle 9.7.1, а дистрибутив проверяется по SHA-256 из
-`gradle/wrapper/gradle-wrapper.properties`.
+Любой язык сочетается с любым DSL. `coderpack templates` покажет, что есть, а
+`--help` работает у каждой команды. Проект на Kotlin также получает
+`dev.ancaria.coderpack:api-kotlin` — необязательные Kotlin-расширения, о них
+рассказано в [coderpack](https://github.com/ancaria-dev/coderpack).
 
-### Публикация мода
+`--git` срабатывает после записи всех файлов. Если Git не установлен, проект
+всё равно рабочий. Первый коммит утилита не делает.
 
-Новый проект по умолчанию является репозиторием модов в формате SRML:
+## Блок sacred
 
-```
-coderpack new my-mod --repo https://github.com/me/my-mod --git
-cd my-mod
-gradlew assembleSacredMod
-coderpack index
-```
-
-`coderpack index` читает `registry.toml` и дескриптор внутри собранного jar,
-после чего пишет `sacred.mods.repository.json`. В индекс попадают версия,
-диапазоны API и загрузчика, авторы, конфликты, имя файла, размер, SHA-256 и
-ссылка на скачивание. При наличии добавляются сайт, путь к исходникам и иконка.
-В корне JSON поле `srml` равно `1`, рядом находятся имя, описание, URL, иконка
-и массив модов. Временной метки нет, поэтому для одного набора jar-файлов
-`coderpack index --check` может сравнивать результат побайтно.
-
-Закоммитьте `registry.toml` и `sacred.mods.repository.json`. Сгенерированный
-workflow собирает мод, перегенерирует индекс по собранному jar, коммитит
-его и создаёт релиз с тегом `<id>-v<version>`, если такого тега ещё нет.
-Сравнением индекса он не занимается: jar с рантаймом языка не собирается
-побайтно одинаково на разных машинах, и такая проверка падала бы на корректной
-работе. Он использует
-`${{ github.token }}` и не требует отдельного секрета. Для скачивания
-`coderpack` workflow обращается к релизу `ancaria-dev/build`, закреплённому в
-`dependencies.json`, а не к последнему.
-
-В `registry.toml` четыре поля:
-
-```toml
-name = "My Mod"
-description = "My Mod, a mod for Sacred Gold"
-url = "https://github.com/me/my-mod"
-releases = "https://github.com/me/my-mod/releases/download/{id}-v{version}/{file}"
-```
-
-Обязательны `name`, `url` и `releases`, а `description` и `icon` необязательны.
-Шаблон `releases` должен содержать `{file}`. Если `--repo` не указан,
-скаффолдер записывает заметный шаблон `https://github.com/you/my-mod` и
-сообщает, что `url` нужно исправить.
-
-Опция `--git` запускается после записи проекта. Ошибка Git не удаляет готовые
-файлы. Коммит скаффолдер не создаёт.
-
-### Шаблоны, языки и DSL
-
-```
-coderpack templates
-templates:
-  minimal   An entrypoint and nothing else. For a mod that listens to nothing.
-            groovy, java, kotlin
-  mod       An entrypoint and one working listener. The default.
-            groovy, java, kotlin
-
-languages:
-  groovy    Groovy, with the runtime packed into the jar.
-  java      Plain Java. What new writes when nobody says otherwise.
-  kotlin    Kotlin, with the standard library packed into the jar.
-
-build scripts:
-  groovy    Groovy DSL. build.gradle, the older syntax most Gradle answers are written in.
-  kotlin    Kotlin DSL. build.gradle.kts, with completion and refactoring in the IDE.
-```
-
-Шаблоны находятся в
-`templates/src/main/resources/templates/<name>/`. Каталог `files/` содержит
-общие файлы шаблона, а `lang/<language>/` содержит точку входа для конкретного
-языка.
-
-Языки находятся в `templates/src/main/resources/languages/<name>/`.
-`language.properties` задаёт описание, каталог исходников, расширение и версию
-компилятора. Файл сборки для каждой пары языка и DSL лежит в
-`dsl/<dsl>/`.
-
-Описания DSL находятся в `templates/src/main/resources/dsl/<name>/`.
-`dsl.properties` задаёт имена build-файла и settings-файла, а `files/`
-содержит settings-файл.
-
-Общие файлы проекта лежат в `common/files/`. Файлы SRML находятся в
-`repository/files/` и добавляются, если не указан `--no-registry`.
-
-В содержимом и именах файлов заменяются `{{id}}`, `{{name}}`,
-`{{description}}`, `{{version}}`, `{{package}}`, `{{packagePath}}`,
-`{{class}}`, `{{entrypoint}}`, `{{author}}`, `{{repo}}`, `{{plugin}}` и
-`{{api}}`. К ним добавляются ключи из `language.properties` и
-`dsl.properties`, кроме `description`. Неизвестный плейсхолдер останавливает
-создание проекта до записи первого файла.
-
-Задача `resourceIndex` индексирует ресурсы во время сборки. Поэтому новый
-шаблон, язык или DSL добавляется файлами, без списка имён в Kotlin. Имя
-`_gitignore` превращается в `.gitignore`, поскольку копирование ресурсов и
-индексатор пропускают dot-файлы.
-
-Несуществующий язык или DSL отклоняется до записи проекта:
-
-```
-coderpack: there is no language "rust". There is: groovy, java, kotlin
-```
-
-`--help` и `-h` работают у каждой подкоманды. `coderpack new --help` выводит
-опции команды `new`, а `coderpack help` добавляет общий список команд.
-
-### Проверка jar
-
-```
-coderpack verify build/sacred-mod/my-mod-1.0.0.jar
-```
-
-Команда принимает несколько путей и печатает отдельный отчёт для каждого jar.
-Код возврата равен 1, если найдена ошибка, и 2 при неправильном вызове.
-Предупреждения не меняют код возврата.
-
-## Настройка сборки мода
-
-`coderpack new` создаёт settings-файл со следующими репозиториями:
-
-```kotlin
-pluginManagement {
-    repositories {
-        mavenLocal()
-        gradlePluginPortal()
-    }
-}
-
-dependencyResolutionManagement {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-}
-
-rootProject.name = "my-mod"
-```
-
-`mavenLocal()` указан первым. До публикации инструментов выполните
-`./gradlew publishToMavenLocal` в репозиториях `build` и `coderpack`. Первый
-публикует плагин, линтер и шаблоны. Второй публикует API загрузчика.
-
-Пример `build.gradle.kts` со всеми основными свойствами:
+`build.gradle.kts` описывает мод:
 
 ```kotlin
 plugins {
@@ -264,222 +108,233 @@ plugins {
 version = "1.0.0"
 
 dependencies {
-    // Рантайм-зависимости попадут внутрь jar.
+    // Всё, что нужно моду во время работы. Попадает внутрь jar.
     implementation("org.jetbrains:annotations:26.0.2")
 }
 
 sacred {
-    id = "my-mod"
-    displayName = "My Mod"
-    description = "Одно предложение под названием в списке модов"
-    version = "1.0.0"
-    entrypoint = "demo.MyMod"
-    authors = listOf("MairwunNx (Pavel Erokhin)")
+    id = "my-mod"                                     // строчные буквы, цифры, дефисы
+    displayName = "My Mod"                            // что видит игрок
+    description = "One sentence, shown under the name in the mod list"
+    version = "1.0.0"                                 // по умолчанию версия проекта
+    entrypoint = "demo.MyMod"                         // класс-наследник SacredMod
+    authors = listOf("MairwunNx (Pavel Erokhin)")     // или author("…") по одному
     website = "https://ancaria.dev"
     repository = "https://github.com/ancaria-dev/mods"
-    conflicts = listOf("another-mod")
-    apiRange = "[3,4)"
-    loaderRange = "[0.1.20,)"
-    apiVersion = "0.200.0"
+    conflicts = listOf("other-mod")                   // или conflictsWith("other-mod")
+    apiRange = "[3,4)"                                // поддерживаемые контракты API
+    loaderRange = "[0.1.20,)"                         // необязательный диапазон версий загрузчика
+    apiVersion = "0.200.0"                            // подключается как compileOnly
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
 }
 ```
 
-Обязательны только `id` и `entrypoint`. `displayName` по умолчанию совпадает с
-`id`, а `version` берётся из версии проекта. `authors` и `conflicts` можно
-пополнять методами `author(name)` и `conflictsWith(id)`.
+Обязательны только `id` и `entrypoint`. `displayName` по умолчанию равен `id`,
+а пустые необязательные значения в дескриптор не попадают.
 
-`apiRange` описывает совместимые контракты API в синтаксисе диапазонов Maven.
-Значение по умолчанию сейчас равно `"[3,4)"`. Плагин не разрешает диапазон, в
-который не входит контракт `Verifier.API`, сейчас это `"3"`.
+Три настройки звучат похоже, но значат разное:
 
-`loaderRange` задаёт совместимые версии Sacred Mod Loader. Оно необязательно.
-Плагин и линтер проверяют его синтаксис, но не существование релизов.
+- `apiRange` — контракты API, с которыми работает мод, в нотации диапазонов
+  Maven. `[3,4)` означает контракт 3 и всё до 4, не включая его. Диапазон
+  можно сузить или расширить, но контракт 3, под который собирает этот
+  инструментарий, должен в нём остаться.
+- `loaderRange` ограничивает версии Sacred Mod Loader. Задавайте его, только
+  если моду нужна конкретная версия. Плагин проверяет синтаксис, но не
+  существование такой версии.
+- `apiVersion` — Maven-версия `dev.ancaria.coderpack:api`. Плагин подключает её
+  как `compileOnly`.
 
-`apiVersion` имеет другой смысл. Это версия артефакта
-`dev.ancaria.coderpack:api`, который добавляется как `compileOnly`. Сейчас
-скаффолдер записывает `"0.200.0"`.
-
-Сборка и установка выполняются так:
-
-```
-gradlew assembleSacredMod
-gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
-```
-
-Первая команда создаёт
-`build/sacred-mod/my-mod-1.0.0.jar` с рантайм-зависимостями. Вторая
-копирует его в каталог `installTo`. Путь можно задать непосредственно:
+`installTo` можно задать и постоянным путём:
 `installTo = file("D:/SteamLibrary/steamapps/common/Sacred Gold/mods")`.
 
-| Задача | Результат |
+| Задача | Что делает |
 |---|---|
 | `generateModDescriptor` | Пишет `META-INF/declaration.toml` из блока `sacred` |
-| `verifySacredMod` | Проверяет результат `shadowJar` и пишет `build/reports/sacred-mod/verify.txt` |
-| `assembleSacredMod` | Копирует проверенный fat jar в `build/sacred-mod` |
-| `installSacredMod` | Копирует собранный jar в `installTo` |
+| `verifySacredMod` | Проверяет собранный jar и пишет `build/reports/sacred-mod/verify.txt` |
+| `assembleSacredMod` | Копирует проверенный jar в `build/sacred-mod` |
+| `installSacredMod` | Копирует этот jar в `installTo` |
 
-Плагин применяет `java` и `com.gradleup.shadow`. Kotlin- и Groovy-плагины
-добавляются сгенерированными build-файлами. Для Java используется
-`options.release = 21`. Kotlin получает `jvmTarget = JVM_21`, а Groovy
-получает `sourceCompatibility`, `targetCompatibility` и `options.release`,
-равные 21.
+Всё, что подключено через `implementation`, оказывается внутри jar, в том
+числе рантайм языка. Из шаблона `mod` jar на Java весит около 1,8 КБ, на
+Kotlin — около 1,8 МБ, на Groovy — около 7,8 МБ. Все компиляторы собирают под
+Java 21.
 
-Стандартная библиотека Kotlin и рантайм Groovy объявлены через
-`implementation`, чтобы Shadow поместил их в jar. Измерения для шаблона `mod`
-дают примерно 1,8 КБ для Java, 1,8 МБ для Kotlin и 7,8 МБ для Groovy.
+## Что проверяет линтер
 
-### Что проверяет линтер
+`assembleSacredMod` сначала запускает `verifySacredMod`. Ошибка останавливает
+сборку. Линтер считает ошибкой:
 
-`assembleSacredMod` зависит от `verifySacredMod`, поэтому непрошедший проверку
-jar не копируется в выходной каталог и в папку игры.
+- нечитаемый jar или jar без `META-INF/declaration.toml`
+- дескриптор без `id`, `entrypoint` или `api`
+- нечитаемый диапазон API или загрузчика, а также диапазон API без контракта 3
+- отсутствующую или абстрактную точку входа или точку входа, которая не
+  наследует `SacredMod`
+- точку входа, которая всё ещё реализует `SacredMod` как интерфейс из API 2
+- точку входа без конструктора без аргументов
+- классы API загрузчика, упакованные в мод
+- метод с `@Subscribe`, у которого не ровно один параметр-событие, тип
+  возврата не `void` и не `Mutation` этого же события, или метод `MONITOR`,
+  который возвращает мутацию
+- файлы подписи, скопированные из подписанной библиотеки
 
-Ошибками считаются:
+Предупреждения сборку не роняют. Они отмечают неверный id, отсутствие версии,
+неверный конфликт или конфликт с самим собой, упакованные классы zygote,
+class-файлы новее Java 21, точку входа с родительским классом вне jar, а также
+непубличные точку входа, конструктор и слушатели.
 
-- нечитаемый jar или отсутствие `META-INF/declaration.toml`
-- отсутствие `id`, `entrypoint` или `api`
-- неверный диапазон `api`, диапазон без `Verifier.API` или неверный
-  `loaderRange`
-- отсутствующий или абстрактный `entrypoint`
-- отсутствие конструктора без аргументов
-- точка входа, которая не наследуется от класса `SacredMod` напрямую или через
-  собственные суперклассы
-- точка входа, которая всё ещё реализует `SacredMod` как интерфейс, каким он
-  был до API 2 включительно
-- классы `dev/ancaria/coderpack/api/` внутри jar
-- файлы подписи `META-INF/*.SF`, `*.DSA` или `*.RSA`
-- метод `@Subscribe` с неверным числом параметров или не-событием, метод,
-  который возвращает что-то кроме `void` или `Mutation` своего события, и
-  метод `MONITOR`, который возвращает мутацию
-
-Предупреждения сообщают о некорректном `id`, отсутствующей версии, неверных
-`conflicts`, классах зиготы, class-файлах новее Java 21, непубличных
-слушателях, непубличных классе или конструкторе точки входа (загрузчик до них
-всё равно дотягивается) и случаях, когда внешняя иерархия классов не позволяет
-доказать наследование от `SacredMod`.
-
-Сокращённый пример ошибки Gradle:
+Неудачная сборка выглядит так:
 
 ```
 > Task :verifySacredMod FAILED
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':verifySacredMod'.
+...
 > my-mod-1.0.0.jar: 1 error
-    error   listener    demo.MyMod.onHero takes 2 parameters
+    error   listener    demo.MyMod.onHero takes 2 parameters. The bus registers a listener with exactly one, and the parameter is what it subscribes to
 ```
 
-Ту же проверку можно запустить напрямую:
+Те же проверки работают без Gradle. `coderpack verify` печатает отчёт по
+каждому jar и завершается с кодом `1` при ошибке или `2` при неверных
+аргументах:
 
 ```
 coderpack verify build/sacred-mod/my-mod-1.0.0.jar
 ```
 
-Линтер читает class-файлы через ASM с `ClassReader.SKIP_CODE`. Классы мода не
-загружаются, поэтому их статические инициализаторы не выполняются.
+Линтер читает байткод через ASM и никогда не загружает ваши классы, поэтому
+статические инициализаторы внутри сборки не выполняются.
 
-### Почему сборка устроена так
+## Публикация мода
 
-Дескриптор генерируется из блока `sacred`, чтобы версия и точка входа
-соответствовали собранному jar.
+Без `--no-registry` каждый новый проект сразу становится репозиторием модов,
+на который можно подписаться в лаунчере:
 
-Shadow упаковывает рантайм-зависимости. Каждый мод загружается
-собственным загрузчиком классов, поэтому нужная библиотека должна находиться
-внутри jar.
+```
+coderpack new my-mod --repo https://github.com/me/my-mod --git
+cd my-mod
+gradlew assembleSacredMod
+coderpack index
+```
 
-API загрузчика остаётся `compileOnly`. Его уже предоставляет загрузчик, а
-вторая копия тех же классов внутри мода вызвала бы несовместимость типов.
+`registry.toml` вы ведёте сами:
 
-Плагин сборки не выбирает язык мода. Он применяет только базовый Java-плагин, а
-Kotlin или Groovy подключаются в проекте мода.
+```toml
+name = "My Mod"
+description = "My Mod, a mod for Sacred Gold"
+url = "https://github.com/me/my-mod"
+releases = "https://github.com/me/my-mod/releases/download/{id}-v{version}/{file}"
+```
 
-## Структура репозитория
+Обязательны `name`, `url` и `releases`. `description` и `icon` можно не
+указывать. Шаблон `releases` собирает ссылку на скачивание и должен содержать
+`{file}`. Без `--repo` утилита запишет `https://github.com/you/my-mod` и
+подскажет, какую строку поправить.
+
+`coderpack index` объединяет `registry.toml` с дескриптором каждого собранного
+jar и пишет `sacred.mods.repository.json`. Не правьте этот файл руками. В нём
+нет отметки времени, поэтому `coderpack index --check` сравнивает его побайтно.
+
+Закоммитьте и запушьте. Готовый workflow соберёт мод, обновит и закоммитит
+индекс, а затем создаст релиз `<id>-v<версия>`, если такого тега ещё нет. Пуш
+без новой версии релиз не создаёт. Секреты не нужны, хватает собственного
+токена GitHub.
+
+## Почему сборка устроена так
+
+**Дескриптор пишет плагин.** Версию и остальное сборка и так знает.
+Сгенерированный дескриптор не разойдётся с jar.
+
+**Библиотеки упаковываются в один jar.** У каждого мода свой загрузчик
+классов, и он видит только содержимое jar. Упаковкой занимается Shadow.
+
+**API подключается только для компиляции.** Загрузчик уже его предоставляет.
+Вторая копия создаёт разные классы с одинаковыми именами и может закончиться
+`ClassCastException`.
+
+**Плагин применяет только `java`.** Плагины Kotlin и Groovy строятся поверх
+него, поэтому язык мод выбирает и настраивает сам.
+
+## Устройство репозитория
 
 ```
 build/
-  gradle/      отдельная Gradle-сборка
+  gradle/      сборка Gradle
     plugin/    SacredPlugin, SacredExtension, Descriptor, Verify и тесты
   verify/      линтер на Java
-  templates/   coderpack, шаблоны, языки и DSL
-  maven/       описание возможного Maven-плагина
+  templates/   coderpack, шаблоны проектов, языки и DSL
+  maven/       заметки о возможном Maven-плагине, пока без реализации
 ```
 
-`gradle/settings.gradle.kts` подключает `verify/` как проект `:verify`, а
-`templates/` как `:templates`. Команда `./gradlew build` из каталога
-`gradle/` собирает и тестирует все три модуля.
+Общие правила живут в `verify/`. `Ids.valid` определяет допустимый id мода,
+и его вызывают и плагин, и утилита. `Verifier.API` хранит контракт API, а
+`Verifier.API_RANGE` выводит из него диапазон по умолчанию.
 
-Правило идентификатора находится в `Ids.valid`. Номер контракта хранится в
-`Verifier.API`, а диапазон по умолчанию вычисляется как `Verifier.API_RANGE`.
-Плагин и скаффолдер используют эти значения из модуля `verify`.
+Шаблоны, языки и DSL — это папки ресурсов в `templates/src/main/resources/`:
+`templates/<name>/`, `languages/<name>/` и `dsl/<name>/`. Каждый файл лежит
+там, где он меняется: точка входа зависит от шаблона и языка, сборочный скрипт
+— от языка и DSL, файл настроек — только от DSL. Так 27 файлов дают 12
+комбинаций. Сборка индексирует папки сама, поэтому новая папка не требует
+кода на Kotlin.
 
-## Сборка и тесты
+Утилита подставляет `{{id}}`, `{{name}}`, `{{description}}`, `{{version}}`,
+`{{package}}`, `{{packagePath}}`, `{{class}}`, `{{entrypoint}}`,
+`{{author}}`, `{{repo}}`, `{{plugin}}` и `{{api}}`, а также все ключи, кроме
+`description`, из `language.properties` и `dsl.properties`. Неразрешённый
+плейсхолдер останавливает генерацию. Чтобы получить `.gitignore`, назовите
+файл `_gitignore`: при копировании ресурсов файлы с точкой пропускаются.
+
+Тот же модуль публикуется как `dev.ancaria.coderpack:templates`. Плагин для
+IntelliJ IDEA вызывает его и не держит собственную копию шаблонов.
+
+## Сборка
 
 ```
 cd gradle
 ./gradlew build
 ```
 
-Сборка не объявляет Java toolchain. Её запускает установленный JDK, а
-`options.release` и `jvmTarget` закрепляют выходные class-файлы на Java 21.
-CI использует Temurin 21.
+Нужен JDK в PATH. CI использует Temurin 21. Блока toolchain нет: JDK, который
+запускает Gradle, компилирует всё под Java 21. Кэш конфигурации включён и
+падает на любой проблеме, поэтому задача, захватившая `project`, сломается
+здесь, а не в чужом моде.
 
-Функциональные тесты плагина запускают вторую сборку через Gradle TestKit,
-создают настоящий mod jar и проверяют дескриптор, класс точки входа, fat jar,
-ошибочный идентификатор и отсутствующую точку входа.
+Тесты собирают настоящие проекты и настоящие jar. Тесты плагина используют
+Gradle TestKit. Сквозной тест утилиты генерирует и собирает все шесть пар
+языка и DSL и ждёт отчёт без единого предупреждения. Тесты линтера собирают
+отдельный jar под каждое правило и не загружают ни одного класса.
+`./gradlew build` также публикует плагин и линтер в Maven Local: сквозной тест
+получает их так же, как сгенерированный мод.
 
-End-to-end тесты скаффолдера создают и собирают проекты для шести сочетаний
-языка и DSL. Готовые jar должны пройти `Verifier.verify` без ошибок и
-предупреждений. Быстрые тесты отдельно проверяют имена, плейсхолдеры,
-непустые каталоги, параметры команд и состав файлов.
-
-Тесты линтера собирают jar-файлы из фикстурных классов. Каждый случай проверяет
-конкретное правило и отсутствие лишних находок.
-
-В `gradle/gradle.properties` включены:
-
-```properties
-org.gradle.configuration-cache=true
-org.gradle.configuration-cache.problems=fail
-```
-
-Функциональные тесты также запускаются с `--configuration-cache`.
-
-### Публикация инструментов
+Утилиту из исходников можно попробовать так:
 
 ```
-./gradlew publishToMavenLocal
+./gradlew :templates:installDist :verify:demoModJar
+../templates/build/install/coderpack/bin/coderpack verify ../verify/build/demo/demo-mod.jar
+../templates/build/install/coderpack/bin/coderpack new demo-mod
 ```
 
-Команда публикует в Maven Local плагин, линтер и библиотеку шаблонов.
+Чтобы проверить невыпущенные изменения на моде на той же машине, выполните
+`./gradlew publishToMavenLocal` здесь и в `coderpack`. Сгенерированные проекты
+сначала смотрят в Maven Local.
 
-CI читает `version` из `gradle/gradle.properties`. При пуше в `master` и
-отсутствии тега `v<version>` он публикует в два места, потому что две половины
-этого репозитория потребляются по-разному: линтер и шаблоны уходят одним
-подписанным архивом в Maven Central, а плагин — в Gradle Plugin Portal, откуда
-и только откуда резолвится `id("dev.ancaria.coderpack")` в сборке мода. Затем
-создаётся GitHub Release.
+## Релизы
+
+Версия хранится в `gradle/gradle.properties`. `pwsh tools/version.ps1 0.200.1`
+поднимает её вместе с `apiVersion` и всеми упоминаниями в README. Когда новая
+версия попадает в `master`, CI публикует её в два места:
+
+- линтер и утилита уходят в Maven Central одним подписанным архивом
+- плагин уходит в Gradle Plugin Portal — только оттуда разрешается
+  `id("dev.ancaria.coderpack")`
+
+Затем CI создаёт тег `v<версия>` и прикладывает `coderpack-<версия>.zip` к
+GitHub-релизу. У `plugin`, `verify` и `templates` всегда одна версия: плагин
+зависит от линтера, а плагин IDE — от шаблонов.
 
 Для Central нужны `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`, `SIGNING_KEY` и
 `SIGNING_PASSWORD`, для портала — `GRADLE_PUBLISH_KEY` и
-`GRADLE_PUBLISH_SECRET`. Без ключа подписи задачи подписи пропускаются, а не
-падают. Загрузка в Central ждёт в портале нажатия Publish: удалить оттуда
-артефакт нельзя никогда.
-
-Под одной версией публикуются артефакты
-`dev.ancaria.coderpack:plugin`, `dev.ancaria.coderpack:verify` и
-`dev.ancaria.coderpack:templates`, а также маркер плагина
-`dev.ancaria.coderpack`. К GitHub Release прикладывается
-`coderpack-<version>.zip`.
-
-## Возможные дополнения
-
-- Maven-плагин в `maven/`
-- новые шаблоны и языки
-- новые варианты DSL
+`GRADLE_PUBLISH_SECRET`. Загрузка в Central ждёт, пока кто-нибудь нажмёт
+Publish в портале. Порядок релизов всего загрузчика описан в
+[CONTRIBUTING](https://github.com/ancaria-dev/.github/blob/master/CONTRIBUTING.md).
 
 ## Лицензия
 
-Проект распространяется по лицензии MIT. Полный текст находится в
-[LICENSE](LICENSE).
+MIT, см. [LICENSE](LICENSE).

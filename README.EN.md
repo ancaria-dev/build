@@ -13,47 +13,56 @@
 
 # build
 
-This repository contains build support for Sacred Gold mods.
+Build tools for Sacred Gold mods: a Gradle plugin, a linter, and the
+`coderpack` command that creates new projects.
 
-`gradle/` holds the `dev.ancaria.coderpack` Gradle plugin. `maven/` contains a
-design note for a possible Maven plugin, with no implementation yet.
+You describe your mod in one `sacred { }` block. The plugin writes the mod
+descriptor, packs your code and its libraries into one jar, and checks that
+jar before it goes anywhere. A jar the loader would reject never reaches your
+game folder.
 
-`verify/` is the linter for packed mod jars. The Gradle plugin runs it before a
-jar can be copied, and CI can run the same checks without Gradle.
+This page covers the build. The mod API itself, with its events and
+listeners, is documented in
+[coderpack](https://github.com/ancaria-dev/coderpack).
 
-`templates/` builds the `coderpack` command line. It creates mod projects,
-checks jars, and generates the index published by a mod repository. The same
-module is published as `dev.ancaria.coderpack:templates` for the IntelliJ IDEA
-plugin.
+## Getting started
 
-## Start a mod
+You need a JDK. Gradle comes with the project.
 
-```
-coderpack new my-mod
-cd my-mod
-gradlew assembleSacredMod
-```
+1. Download `coderpack-<version>.zip` from the
+   [releases](https://github.com/ancaria-dev/build/releases), unpack it, and
+   add its `bin` folder to PATH.
+2. Create a project and build it:
 
-The last command writes a jar that the loader can accept. You need a JDK, but
-you do not need to copy another project's build file or install a matching
-system version of Gradle.
+   ```
+   coderpack new my-mod
+   cd my-mod
+   gradlew assembleSacredMod
+   ```
 
-Each release includes `coderpack` as a zip. To build it from a checkout:
+3. Copy the jar from `build/sacred-mod/` into `<Sacred Gold>/mods`, or let
+   Gradle do it:
 
-```
-cd gradle
-./gradlew :templates:installDist
-../templates/build/install/coderpack/bin/coderpack new my-mod
-```
+   ```
+   gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
+   ```
 
-The default project contains:
+Prefer an IDE? The
+[IntelliJ IDEA plugin](https://github.com/ancaria-dev/idea) creates the same
+project from File → New → Project.
+
+## A new project
+
+`coderpack new my-mod` treats `my-mod` as the mod id and checks it before it
+writes anything. From the id it derives the display name `My Mod`, the package
+`mods.mymod`, and the class `MyMod`. The project contains:
 
 ```
 .gitignore
 README.md
-build.gradle.kts                     the filled sacred { } block
+build.gradle.kts                     the filled-in sacred { } block
 settings.gradle.kts                  mavenLocal first, then the plugin portal
-registry.toml                        metadata for a launcher repository
+registry.toml                        metadata for a mod repository
 .github/workflows/build.yml          builds and releases each new version
 dependencies.json                    the coderpack version CI downloads
 gradlew, gradlew.bat
@@ -62,210 +71,37 @@ gradle/wrapper/gradle-wrapper.properties
 src/main/java/mods/mymod/MyMod.java  onLoad and one working listener
 ```
 
-Java is the default language. `--language kotlin` writes
-`src/main/kotlin/mods/mymod/MyMod.kt` and configures the Kotlin plugin.
-`--language groovy` does the same for Groovy.
-
-Every entrypoint extends the abstract class `SacredMod` and overrides
-`onLoad()`. `getContext()` returns the mod's context from the first line of the
-class on, and listeners are registered through
-`getContext().getRegistry().getEventRegistry()`. The Java and Groovy `mod`
-entrypoints register an annotated `@Subscribe` method. The Kotlin one extends
-the same Java class, reads the API's getters as properties, and registers a
-lambda: `context.registry.eventRegistry.on(Hero::class.java) { }`.
-
-A Kotlin project gets one dependency the other two do not:
-`dev.ancaria.coderpack:api-kotlin`, Kotlin extensions over the same API. It
-adds no capability, since every declaration in it forwards to the Java API,
-and the generated entrypoint uses none of it, so deleting the dependency is a
-supported way to have a Kotlin mod. The module is `implementation`, not
-`compileOnly`, because the loader hands a mod the API and not this.
-
-The build script language is a separate choice. `--dsl groovy` writes
-`build.gradle` and `settings.gradle` instead of the `.kts` files. Without that
-option, the project uses Kotlin DSL. Any supported mod language can be paired
-with either build DSL.
-
-`--no-registry` omits `registry.toml`, `dependencies.json`, and the release
-workflow. By default, a new mod is also a repository that a launcher can
-subscribe to.
-
-`my-mod` is the mod id. `coderpack` validates it before writing anything, then
-derives `My Mod`, `mods.mymod`, and `MyMod` for the display name, package, and
-entrypoint class.
+The wrapper matches this repository's: Gradle 9.7.1 with the same SHA-256
+checksum. Your first build takes one command, whatever Gradle is installed on
+the machine.
 
 | Option | What it changes |
 |---|---|
-| `--package dev.example.mymod` | The Java package and entrypoint directory |
-| `--display-name "My Splendid Mod"` | The name shown to players |
-| `--author "Your Name"` | The descriptor's `authors` value. The current account is used by default |
-| `--description "One sentence"` | The text shown below the mod name |
+| `--package dev.example.mymod` | The package and the entrypoint's folder |
+| `--display-name "My Splendid Mod"` | The name players see |
+| `--author "Your Name"` | The `authors` value. The default is the current account |
+| `--description "One sentence"` | The line under the mod name |
 | `--mod-version 0.2.0` | The mod version. The default is `1.0.0` |
-| `--dir somewhere/else` | The output directory. The default is `./<name>` |
-| `--template minimal` | The project template |
-| `--language kotlin` | The mod language: `java`, `kotlin`, or `groovy`. The default is `java` |
-| `--dsl groovy` | The build DSL: `kotlin` or `groovy`. The default is `kotlin` |
-| `--repo https://github.com/me/my-mod` | The future project URL used to build download links |
-| `--no-registry` | Omits `registry.toml`, `dependencies.json`, and the release workflow |
+| `--dir somewhere/else` | The output folder. The default is `./<name>` |
+| `--template minimal` | The template: `mod` (the default) or `minimal` |
+| `--language kotlin` | The mod language: `java` (the default), `kotlin`, or `groovy` |
+| `--dsl groovy` | The build script language: `kotlin` (the default) or `groovy` |
+| `--repo https://github.com/me/my-mod` | The project URL used for download links |
+| `--no-registry` | Leaves out `registry.toml`, `dependencies.json`, and the workflow |
 | `--git` | Runs `git init` and adds `--repo` as `origin` |
-| `--force` | Writes into a non-empty directory |
+| `--force` | Writes into a folder that isn't empty |
 
-The generated project includes the Gradle wrapper and its jar. This keeps the
-first build to one command and avoids depending on whichever Gradle version is
-installed on the machine. The scaffolder packages this repository's own
-wrapper files as resources, so generated projects use Gradle 9.7.1 and verify
-the same SHA-256 checksum as this build.
+Any language pairs with either build DSL. `coderpack templates` lists what's
+available, and `--help` works on every command. A Kotlin project also gets
+`dev.ancaria.coderpack:api-kotlin`, optional Kotlin extensions described in
+[coderpack](https://github.com/ancaria-dev/coderpack).
 
-### Make the mod installable
+`--git` runs after every file is written. If Git is missing, the project still
+works, and the scaffolder never makes the first commit for you.
 
-A generated project is also an SRML mod repository unless you pass
-`--no-registry`.
+## The sacred block
 
-```
-coderpack new my-mod --repo https://github.com/me/my-mod --git
-cd my-mod
-gradlew assembleSacredMod
-coderpack index
-```
-
-Commit the generated `sacred.mods.repository.json`, then push. The included
-GitHub Actions workflow builds the mod, regenerates and commits the index, and
-creates a release tagged `<id>-v<version>` when that tag does not exist. A push without a new version creates no release. The workflow
-uses GitHub's repository token, so it needs no extra secret.
-
-`coderpack index` reads `registry.toml` and the descriptor inside each built
-jar, then writes `sacred.mods.repository.json`. Each mod entry can carry its
-name, description, version, API and loader ranges, authors, website, conflicts,
-source path, and icon. The distribution block records the file name, size,
-SHA-256 hash, and release URL. The root object's `srml` field is `1`, alongside the
-repository name, description, URL, icon, and mod array. The output has no
-timestamp, so `coderpack index --check` can compare it byte for byte for one
-set of jars. The generated workflow does not run that comparison: on the
-default branch it writes the index and commits it, because a mod jar carrying a
-language runtime is not reproducible from one machine to the next and comparing
-it fails on correct work. It indexes an already released mod from the JAR on
-that release and a version with no tag yet from the JAR it is about to publish,
-so the checksum always describes the file the download URL serves.
-
-`registry.toml` is the hand-maintained part:
-
-```toml
-name = "My Mod"
-description = "My Mod, a mod for Sacred Gold"
-url = "https://github.com/me/my-mod"
-releases = "https://github.com/me/my-mod/releases/download/{id}-v{version}/{file}"
-```
-
-`name`, `url`, and `releases` are required. `description` is optional, as is an
-`icon` field for a repository icon. The `releases` template builds each download
-URL and must contain `{file}`. `coderpack new --repo <url>` fills both URL
-fields. Without `--repo`, it writes `https://github.com/you/my-mod` and tells
-you which line to change.
-
-`--git` runs after every file has been written. If Git is unavailable, the
-project remains usable and the report says that no repository was created.
-The scaffolder does not make the first commit.
-
-### Templates, languages, and build scripts
-
-```
-coderpack templates
-templates:
-  minimal   An entrypoint and nothing else. For a mod that listens to nothing.
-            groovy, java, kotlin
-  mod       An entrypoint and one working listener. The default.
-            groovy, java, kotlin
-
-languages:
-  groovy    Groovy, with the runtime packed into the jar.
-  java      Plain Java. What new writes when nobody says otherwise.
-  kotlin    Kotlin, with the standard library packed into the jar.
-
-build scripts:
-  groovy    Groovy DSL. build.gradle, the older syntax most Gradle answers are written in.
-  kotlin    Kotlin DSL. build.gradle.kts, with completion and refactoring in the IDE.
-```
-
-Templates live under
-`templates/src/main/resources/templates/<name>/`. Each directory has a
-`template.properties`, files shared by every supported language, and one
-`lang/<language>/` tree per entrypoint implementation.
-
-Languages live under
-`templates/src/main/resources/languages/<name>/`. Each has a
-`language.properties`, optional files shared by both build DSLs, and one build
-script under `dsl/<dsl>/` for each supported DSL.
-
-Build DSLs live under `templates/src/main/resources/dsl/<name>/`. Each has a
-`dsl.properties` and the matching settings file.
-
-This split keeps each varying file in one place. Entrypoints vary by template
-and language. Build scripts vary by language and DSL. Settings files vary only
-by DSL. The README, `.gitignore`, and repository files are shared. The current
-layout produces 12 project combinations from 27 template files instead of
-maintaining a separate directory for every combination.
-
-The scaffolder substitutes `{{id}}`, `{{name}}`, `{{description}}`,
-`{{version}}`, `{{package}}`, `{{packagePath}}`, `{{class}}`,
-`{{entrypoint}}`, `{{author}}`, `{{repo}}`, `{{plugin}}`, and `{{api}}` in
-file names and contents. Keys from `language.properties` and `dsl.properties`,
-except `description`, become placeholders too. An unresolved placeholder stops
-the run.
-
-Adding a template, language, or DSL means adding its resource directory. The
-build indexes those resources automatically, so their names are not hardcoded
-in Kotlin. Use `_gitignore` for a template file that should become
-`.gitignore`, because resource copying and indexing skip dotfiles.
-
-Unsupported languages and DSLs fail before the first file is written:
-
-```
-coderpack: there is no language "rust". There is: groovy, java, kotlin
-```
-
-`--help` and `-h` work on every subcommand. `coderpack new --help` prints the
-same option list included in `coderpack help`.
-
-### Check a jar
-
-```
-coderpack verify build/sacred-mod/my-mod-1.0.0.jar
-```
-
-This runs the same library as `verifySacredMod`, without Gradle. It prints one
-block per jar, exits `1` when it finds an error, and exits `2` for invalid
-arguments.
-
-## Write a mod
-
-`coderpack new` writes the settings and build files shown below.
-
-`settings.gradle.kts` declares the plugin and API repositories:
-
-```kotlin
-pluginManagement {
-    repositories {
-        mavenLocal()
-        gradlePluginPortal()
-    }
-}
-
-dependencyResolutionManagement {
-    repositories {
-        mavenLocal()
-        mavenCentral()
-    }
-}
-
-rootProject.name = "my-mod"
-```
-
-`mavenLocal()` comes first because local development publishes both the plugin
-and API there. To try unreleased work, build this repository and `coderpack`,
-then run `./gradlew publishToMavenLocal` in both checkouts. Released versions
-come from the plugin portal and Maven Central.
-
-A Kotlin DSL build for a mod looks like this:
+`build.gradle.kts` describes the mod:
 
 ```kotlin
 plugins {
@@ -275,21 +111,21 @@ plugins {
 version = "1.0.0"
 
 dependencies {
-    // Anything the mod needs at runtime. It travels inside the jar.
+    // Anything the mod needs at run time. It travels inside the jar.
     implementation("org.jetbrains:annotations:26.0.2")
 }
 
 sacred {
-    id = "my-mod"                                     // lowercase, digits, hyphens
-    displayName = "My Mod"                            // what a player reads
+    id = "my-mod"                                     // lowercase letters, digits, hyphens
+    displayName = "My Mod"                            // what players read
     description = "One sentence, shown under the name in the mod list"
     version = "1.0.0"                                 // defaults to the project version
     entrypoint = "demo.MyMod"                         // the class extending SacredMod
-    authors = listOf("MairwunNx (Pavel Erokhin)")     // or author("MairwunNx (Pavel Erokhin)"), one at a time
+    authors = listOf("MairwunNx (Pavel Erokhin)")     // or author("…"), one at a time
     website = "https://ancaria.dev"
     repository = "https://github.com/ancaria-dev/mods"
     conflicts = listOf("other-mod")                   // or conflictsWith("other-mod")
-    apiRange = "[3,4)"                                // API contracts this mod supports
+    apiRange = "[3,4)"                                // API contracts the mod supports
     loaderRange = "[0.1.20,)"                         // optional loader release range
     apiVersion = "0.200.0"                            // added as compileOnly
     installTo = layout.dir(providers.gradleProperty("sacredDir").map { file("$it/mods") })
@@ -297,121 +133,125 @@ sacred {
 ```
 
 Only `id` and `entrypoint` are required. `displayName` defaults to `id`, and
-the descriptor version defaults to the project version. Other optional values
-are omitted when blank or unset.
+empty optional values stay out of the descriptor.
 
-The generated descriptor uses Maven range notation. `api = "[3,4)"` means the
-mod supports API contract 3 and stops before contract 4. The default is the
-current contract and no other. Authors may widen or narrow the range, but it
-must still contain the contract used by this toolchain.
+Three settings sound alike but mean different things:
 
-`loaderRange` is optional. Set it only when the mod needs a particular Sacred
-Mod Loader release. The plugin checks its syntax but cannot prove compatibility
-with loader releases.
+- `apiRange` lists the API contracts the mod works with, in Maven range
+  notation. `[3,4)` means contract 3, up to but not including 4. You may widen
+  or narrow it, but it must include contract 3, the one this toolchain builds.
+- `loaderRange` pins Sacred Mod Loader releases. Set it only when a mod needs a
+  specific release. The plugin checks the syntax, not whether such a release
+  exists.
+- `apiVersion` is the Maven version of `dev.ancaria.coderpack:api`. The plugin
+  adds it as `compileOnly`.
 
-`apiVersion` is different from `apiRange`. It is the Maven artifact version of
-`dev.ancaria.coderpack:api`, currently `0.200.0`, and the plugin adds that
-dependency as `compileOnly`.
-
-Build or install the mod with:
-
-```
-gradlew assembleSacredMod
-gradlew installSacredMod -PsacredDir="D:\SteamLibrary\steamapps\common\Sacred Gold"
-```
-
-The first command writes
-`build/sacred-mod/my-mod-1.0.0.jar` with runtime dependencies packed inside.
-The second copies it to the configured `installTo` directory. You can hardcode
-the path instead:
+`installTo` can also be a fixed path:
 `installTo = file("D:/SteamLibrary/steamapps/common/Sacred Gold/mods")`.
 
 | Task | What it does |
 |---|---|
 | `generateModDescriptor` | Writes `META-INF/declaration.toml` from the `sacred` block |
 | `verifySacredMod` | Checks the packed jar and writes `build/reports/sacred-mod/verify.txt` |
-| `assembleSacredMod` | Copies the verified fat jar to `build/sacred-mod` |
+| `assembleSacredMod` | Copies the checked jar to `build/sacred-mod` |
 | `installSacredMod` | Copies that jar to `installTo` |
 
-The plugin applies `java` and `com.gradleup.shadow`. A Kotlin or Groovy mod adds
-its own language plugin, and a Kotlin one also adds `api-kotlin`, which is
-packed like any other runtime dependency; it is inline extensions over the API,
-so what reaches the jar is small. Java uses `options.release = 21`. Generated Kotlin
-projects set `jvmTarget = JVM_21`, while Groovy projects set
-`sourceCompatibility`, `targetCompatibility`, and `options.release` to 21.
-Their standard libraries use `implementation`, so Shadow packs them.
+Every library on `implementation` ends up inside the jar, and that includes a
+language runtime. From the `mod` template, a Java jar weighs about 1.8 KB, a
+Kotlin jar about 1.8 MB, and a Groovy jar about 7.8 MB. Every compiler targets
+Java 21.
 
-Those runtimes affect jar size. From the `mod` template, the Java jar is about
-1.8 KB, the Kotlin jar about 1.8 MB, and the Groovy jar about 7.8 MB. Each mod
-has its own class loader, so the Kotlin standard library or Groovy runtime must
-travel inside the mod jar.
+## What the linter checks
 
-### Verification runs before copying
+`assembleSacredMod` runs `verifySacredMod` first. An error stops the build.
+The linter reports an error for:
 
-`assembleSacredMod` depends on `verifySacredMod`. A jar that fails verification
-never reaches `build/sacred-mod` or the game directory.
-
-The linter reports errors for:
-
-- an unreadable jar
-- a missing `META-INF/declaration.toml`
+- a jar it can't read, or one without `META-INF/declaration.toml`
 - a descriptor without `id`, `entrypoint`, or `api`
-- an invalid API range, one that excludes this toolchain's API contract, or an
-  invalid loader range
-- a missing or abstract entrypoint, or one that does not extend the
-  `SacredMod` class, directly or through its own superclasses
-- an entrypoint that still implements `SacredMod` as the interface it was up
-  to API 2
+- an unreadable API or loader range, or an API range without contract 3
+- a missing or abstract entrypoint, or one that doesn't extend `SacredMod`
+- an entrypoint that still implements `SacredMod` as the API 2 interface
 - an entrypoint without a no-argument constructor
-- loader API classes packed into the mod jar
-- a `@Subscribe` method with the wrong parameter count or type, a return type
+- loader API classes packed into the mod
+- a `@Subscribe` method with anything but one event parameter, a return type
   other than `void` or that event's own `Mutation`, or a `MONITOR` method that
   returns a mutation
-- signature files copied from a signed dependency
+- signature files copied from a signed library
 
-Warnings do not fail the build. They cover invalid ids, missing versions,
-invalid or self-referential conflicts, packed zygote classes, class files newer
-than Java 21, entrypoint inheritance that cannot be resolved from the jar, a
-non-public entrypoint class or constructor, which the loader still reaches, and
-non-public listeners.
+Warnings don't fail the build. They flag an invalid id, a missing version, an
+invalid or self-referencing conflict, packed zygote classes, class files newer
+than Java 21, an entrypoint whose parent class lives outside the jar, and a
+non-public entrypoint, constructor, or listener.
 
 A failed build looks like this:
 
 ```
 > Task :verifySacredMod FAILED
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':verifySacredMod' (registered by plugin 'dev.ancaria.coderpack').
+...
 > my-mod-1.0.0.jar: 1 error
     error   listener    demo.MyMod.onHero takes 2 parameters. The bus registers a listener with exactly one, and the parameter is what it subscribes to
 ```
 
-The command-line entrypoint runs the same checks:
+The same checks run without Gradle. `coderpack verify` prints one report per
+jar and exits with `1` on an error or `2` on bad arguments:
 
 ```
 coderpack verify build/sacred-mod/my-mod-1.0.0.jar
 ```
 
-The linter reads bytecode with ASM and never loads mod classes. Loading them
-could run a static initializer inside the build process.
+The linter reads bytecode with ASM and never loads your classes, so no static
+initializer runs inside the build.
 
-### Design choices
+## Publishing a mod
 
-**The descriptor is generated.** It repeats data the build already knows,
-especially the version. Generating it prevents the jar and descriptor from
-drifting apart.
+Unless you pass `--no-registry`, every new project is also a mod repository
+that the launcher can subscribe to:
 
-**Runtime dependencies go into one jar.** A mod's class loader cannot see a
-library unless that library is inside its jar. Shadow handles the packaging.
+```
+coderpack new my-mod --repo https://github.com/me/my-mod --git
+cd my-mod
+gradlew assembleSacredMod
+coderpack index
+```
 
-**The API is compile-only.** The loader already provides it. Packing a second
-copy creates different classes with the same names and can cause a
+`registry.toml` is the part you maintain:
+
+```toml
+name = "My Mod"
+description = "My Mod, a mod for Sacred Gold"
+url = "https://github.com/me/my-mod"
+releases = "https://github.com/me/my-mod/releases/download/{id}-v{version}/{file}"
+```
+
+`name`, `url`, and `releases` are required. `description` and `icon` are
+optional. The `releases` template builds each download link and must contain
+`{file}`. Without `--repo`, the scaffolder writes
+`https://github.com/you/my-mod` and tells you which line to change.
+
+`coderpack index` combines `registry.toml` with the descriptor of each built
+jar and writes `sacred.mods.repository.json`. Don't edit that file by hand.
+It has no timestamp, so `coderpack index --check` can compare it byte for
+byte.
+
+Commit and push. The included workflow builds the mod, regenerates the index,
+commits it, and creates a `<id>-v<version>` release when that tag doesn't
+exist yet. A push without a new version releases nothing. The workflow needs
+no secret beyond GitHub's own token.
+
+## Design choices
+
+**The plugin writes the descriptor.** The build already knows the version and
+the rest. A generated descriptor can't drift from the jar.
+
+**Libraries go into one jar.** Each mod has its own class loader, which sees
+only what's inside the jar. Shadow does the packing.
+
+**The API is compile-only.** The loader already provides it. A second copy
+creates different classes with the same names and can end in a
 `ClassCastException`.
 
-**The plugin applies only `java`.** Other JVM language plugins build on it, so
-the mod chooses and configures its own language.
+**The plugin applies only `java`.** Kotlin and Groovy plugins build on top of
+it, so your mod picks and configures its own language.
 
 ## Repository layout
 
@@ -419,116 +259,86 @@ the mod chooses and configures its own language.
 build/
   gradle/      the Gradle build
     plugin/    SacredPlugin, SacredExtension, Descriptor, Verify, and tests
-  verify/      the linter, written in Java
+  verify/      the linter, in Java
   templates/   coderpack, project templates, languages, and DSLs
-  maven/       design notes for a possible Maven plugin
+  maven/       notes for a possible Maven plugin, not implemented yet
 ```
 
-`gradle/settings.gradle.kts` includes `verify/` and `templates/` as projects
-outside the Gradle root directory, so `./gradlew build` covers all three.
+Shared rules live in `verify/`. `Ids.valid` defines a valid mod id, and both
+the plugin and the scaffolder call it. `Verifier.API` holds the API contract,
+and `Verifier.API_RANGE` derives the default range from it.
 
-Shared rules live in `verify/`. `Ids.valid` defines mod ids, and both the plugin
-and scaffolder call it. `Verifier.API` defines the API contract.
-`Verifier.API_RANGE` derives the default descriptor range from that contract,
-and `Descriptor.API` reads it.
+Templates, languages, and DSLs are resource folders under
+`templates/src/main/resources/`, in `templates/<name>/`, `languages/<name>/`,
+and `dsl/<name>/`. Each file lives where it varies: an entrypoint depends on
+the template and language, a build script on the language and DSL, a settings
+file on the DSL only. That gives 12 combinations from 27 files. The build
+indexes the folders itself, so adding one takes no Kotlin code.
 
-## Build and test
+The scaffolder fills in `{{id}}`, `{{name}}`, `{{description}}`,
+`{{version}}`, `{{package}}`, `{{packagePath}}`, `{{class}}`,
+`{{entrypoint}}`, `{{author}}`, `{{repo}}`, `{{plugin}}`, and `{{api}}`, plus
+every key except `description` from `language.properties` and
+`dsl.properties`. An unresolved placeholder stops the run. Name a file
+`_gitignore` to get `.gitignore`: resource copying skips dotfiles.
+
+The same module is published as `dev.ancaria.coderpack:templates`, and the
+IntelliJ IDEA plugin calls it instead of keeping its own copy of the
+templates.
+
+## Building
 
 ```
 cd gradle
 ./gradlew build
 ```
 
-The build needs a JDK on `PATH`. CI uses Temurin 21. There is no Java toolchain
-block, so the JDK running Gradle performs the compilation. Java and Kotlin
-outputs target Java 21. The wrapper pins Gradle 9.7.1 and checks its SHA-256
-before use.
+The build needs a JDK on PATH. CI uses Temurin 21. There is no toolchain
+block, so the JDK that runs Gradle compiles everything for Java 21. The
+configuration cache is on and fails on any problem, so a task that captures
+`project` breaks here and not in someone's mod.
 
-The plugin's group, version, and API artifact version live in
-`gradle/gradle.properties`. CI reads the same `version` property when deciding
-whether to publish.
+The tests build real projects and real jars. The plugin tests use Gradle
+TestKit. The scaffolder's end-to-end test generates and builds all six
+language and DSL pairs and expects a report without a single warning. The
+linter tests build a fixture jar for each rule and never load a class.
+`./gradlew build` also publishes the plugin and linter to Maven Local, because
+the end-to-end test resolves them the way a generated mod would.
 
-The plugin tests use Gradle TestKit to build real projects. They check the fat
-jar, generated descriptor, verification failure, id validation, API and loader
-ranges, and configuration-cache compatibility.
-
-The scaffolder's end-to-end test generates and builds all six language and DSL
-pairs. It then requires an empty verifier report, including no warnings. The
-remaining tests cover names, placeholders, output safety, template selection,
-help, and resource discovery.
-
-The verifier tests build real fixture jars. They cover each declaration,
-content, entrypoint, listener, and range rule without loading classes.
-
-The build enables:
-
-```
-org.gradle.configuration-cache=true
-org.gradle.configuration-cache.problems=fail
-```
-
-A Gradle `project` reference captured by a task action therefore fails here
-instead of breaking a mod build later.
-
-To exercise the standalone command line:
+To try the command line from source:
 
 ```
 ./gradlew :templates:installDist :verify:demoModJar
 ../templates/build/install/coderpack/bin/coderpack verify ../verify/build/demo/demo-mod.jar
-```
-
-`demoModJar` packs the passing fixture as a real mod jar. The scaffolder is the
-same binary:
-
-```
 ../templates/build/install/coderpack/bin/coderpack new demo-mod
-cd demo-mod && ./gradlew assembleSacredMod
 ```
 
-Useful development commands:
+To test unreleased changes in a mod on the same machine, run
+`./gradlew publishToMavenLocal` here and in `coderpack`. Generated projects
+check Maven Local first.
 
-```
-./gradlew test                  # all test tasks
-./gradlew publishToMavenLocal   # what a mod on the same machine resolves
-```
+## Releases
 
-`./gradlew build` publishes the plugin and verifier to the local Maven
-repository because the scaffolder's end-to-end test resolves them the same way
-as a generated mod.
+The version lives in `gradle/gradle.properties`. `pwsh tools/version.ps1
+0.200.1` raises it together with `apiVersion` and every mention in the
+READMEs. When you push a new version to `master`, CI publishes it in two
+places:
 
-### Publishing
+- the linter and the scaffolder go to Maven Central as one signed bundle
+- the plugin goes to the Gradle Plugin Portal, the only place
+  `id("dev.ancaria.coderpack")` resolves from
 
-```
-./gradlew publishToMavenLocal
-```
+Then CI creates the `v<version>` tag and attaches `coderpack-<version>.zip` to
+the GitHub release. `plugin`, `verify`, and `templates` always share one
+version: the plugin depends on the linter, and the IDE plugin on the
+templates.
 
-That is enough for a mod on the same machine. For a release, CI reads `version`
-from `gradle/gradle.properties` on pushes to `master`. If `v<version>` does not
-exist, it publishes to two places: the linter and the scaffolder to Maven
-Central as one signed bundle, the plugin to the Gradle Plugin Portal, which is
-where `id("dev.ancaria.coderpack")` resolves from and the only place it does --
-then creates that tag and attaches `coderpack-<version>.zip` to the GitHub
-release.
-
-Central takes `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`, `SIGNING_KEY` and
-`SIGNING_PASSWORD`; the portal takes `GRADLE_PUBLISH_KEY` and
-`GRADLE_PUBLISH_SECRET`. Without a signing key the sign tasks are skipped rather
-than failing. A Central upload waits in the portal for somebody to press
-Publish, because an artifact there can never be deleted.
-
-The implementation artifacts
-`dev.ancaria.coderpack:plugin`, `dev.ancaria.coderpack:verify`, and
-`dev.ancaria.coderpack:templates` share one version. Gradle also publishes the
-`dev.ancaria.coderpack` plugin marker. The plugin's POM depends on the
-verifier, while the IDE plugin consumes the templates library. Publishing only
-part of that set would leave an unresolvable dependency.
-
-## Possible additions
-
-- a working Maven plugin under `maven/`
-- templates for library mods or mods with configuration files
-- an IDE run configuration that installs a mod and starts the game
+Central needs `CENTRAL_USERNAME`, `CENTRAL_PASSWORD`, `SIGNING_KEY`, and
+`SIGNING_PASSWORD`. The portal needs `GRADLE_PUBLISH_KEY` and
+`GRADLE_PUBLISH_SECRET`. An upload to Central waits until someone presses
+Publish in the portal. The loader-wide release order is in
+[CONTRIBUTING](https://github.com/ancaria-dev/.github/blob/master/CONTRIBUTING.EN.md).
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT, see [LICENSE](LICENSE).
